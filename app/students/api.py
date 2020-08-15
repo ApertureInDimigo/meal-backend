@@ -23,7 +23,7 @@ class Students(Resource):
             data = StudentSchema().load(args)
         except marshmallow.exceptions.ValidationError as e:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
-        if not (1 <= data["school_grade"] <= 6) or not (1 <= data["school_class"] <= 30):
+        if not (1 <= data["schoolGrade"] <= 6) or not (1 <= data["schoolClass"] <= 30):
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
         same_identity_count = Student.query.filter(
@@ -31,9 +31,9 @@ class Students(Resource):
         if same_identity_count > 0:
             return {"message": "이미 존재하는 ID나 별명입니다."}, 409
 
-        school_row = School.query.filter_by(school_id=data["school_id"]).first()
+        school_row = School.query.filter_by(school_id=data["schoolId"]).first()
         if school_row is None:
-            url = f"https://open.neis.go.kr/hub/schoolInfo?&SD_SCHUL_CODE={data['school_id']}&Type=json"
+            url = f"https://open.neis.go.kr/hub/schoolInfo?&SD_SCHUL_CODE={data['schoolId']}&Type=json"
             response = requests.request("GET", url)
 
             school_data = json.loads(response.text)
@@ -59,7 +59,7 @@ class Students(Resource):
             print(school_row.school_seq)
 
         if school_row.verify_code is not None:
-            if "school_code" not in data or data["school_code"] != school_row.verify_code:
+            if "schoolCode" not in data or data["schoolCode"] != school_row.verify_code:
                 return {"message": "학교 인증 코드가 일치하지 않습니다."}, 403
 
         password_salt = bcrypt.gensalt()
@@ -70,8 +70,8 @@ class Students(Resource):
             password=bcrypt.hashpw(data["password"].encode('UTF-8'), password_salt).decode('UTF-8'),
             password_salt=password_salt,
             nickname=data["nickname"],
-            school_grade=data["school_grade"],
-            school_class=data["school_class"],
+            school_grade=data["schoolGrade"],
+            school_class=data["schoolClass"],
             register_date=datetime.now(),
             point=0,
             school_seq=school_row.school_seq

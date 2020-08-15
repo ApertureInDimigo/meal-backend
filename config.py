@@ -44,5 +44,3 @@ else:
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = os.environ.get('SECRET_KEY', None)
-
-# PostgreSQL
