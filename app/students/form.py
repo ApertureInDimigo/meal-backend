@@ -12,6 +12,8 @@ class StudentSchema(Schema):
     school_id = fields.Integer(required=True, data_key="schoolId")
     school_code = fields.String(required=False, data_key="schoolCode")
 
+    access_token = fields.String(required=False, data_key="accessToken")
+
 
 
 

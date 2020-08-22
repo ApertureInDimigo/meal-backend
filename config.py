@@ -11,6 +11,7 @@ else:
     isLocal = False
 
 if isLocal:
+    print("local")
     config = configparser.ConfigParser()
     config.read('config.ini')
 
@@ -26,7 +27,7 @@ if isLocal:
 
     DEBUG = True
     PORT = 5000
-    HOST = "127.0.0.1"
+    HOST = "0.0.0.0"
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = config['DEFAULT']['SECRET_KEY']

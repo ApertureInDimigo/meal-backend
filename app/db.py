@@ -23,14 +23,21 @@ class Student(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     student_seq = db.Column(db.Integer, primary_key=True, nullable=False)
-    id = db.Column(db.String(20), nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    password_salt = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.String(20), nullable=True)
+    password = db.Column(db.String(100), nullable=True)
+    password_salt = db.Column(db.String(100), nullable=True)
     nickname = db.Column(db.String(20), nullable=False)
     school_grade = db.Column(db.Integer, nullable=False)
     school_class = db.Column(db.Integer, nullable=False)
     register_date = db.Column(db.DateTime, nullable=False)
     point = db.Column(db.Integer, nullable=False)
+
+    gender = db.Column(db.String(10), nullable=True)
+
+    kakao_id = db.Column(db.String(20), nullable=True)
+
+
+
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     school = relationship("School", backref=backref('student', order_by=student_seq))
 
@@ -46,3 +53,28 @@ class School(db.Model):
     region = db.Column(db.String(10), nullable=False)
     address = db.Column(db.String(50), nullable=False)
     type = db.Column(db.String(10), nullable=False)
+
+
+
+class MenuRating(db.Model):
+
+    comment_seq = db.Column(db.Integer, primary_key=True, nullable=False)
+
+    school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
+    student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
+
+
+    school = relationship("School", backref=backref('menurating', order_by=comment_seq))
+    student = relationship("Student", backref=backref('menurating', order_by=comment_seq))
+
+    menu_name = db.Column(db.String(30), nullable=False)
+    menu_date = db.Column(db.DateTime, nullable=False)
+
+    rating = db.Column(db.Integer, nullable=True)
+    comment_content = db.Column(db.Integer, nullable=True)
+
+
+    banned = db.Column(db.Boolean, nullable=False)
+
+    comment_date = db.Column(db.DateTime, nullable=False)
+
