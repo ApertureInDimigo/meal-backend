@@ -25,6 +25,7 @@ if isLocal:
                                                                                             DB_ADDR=pg_db_hostname,
                                                                                             DB_NAME=pg_db_name)
 
+
     DEBUG = True
     PORT = 5000
     HOST = "0.0.0.0"

@@ -39,20 +39,34 @@ class _Schools(Resource):
 
 class _SchoolCode(Resource):
 
-    def get(self, school_id = None):
-        if not school_id:
-            return {"message": "학교ID가 입력되지 않았습니다."}, 400
-        school_code = request.args.get("schoolCode")
-        if school_code is None:
+    def get(self, school_code=None):
+        if not school_code or school_code == "":
             return {"message": "학교코드가 입력되지 않았습니다."}, 400
-
-        school_row = School.query.filter_by(school_id=school_id).first()
+        school_row = School.query.filter_by(verify_code=school_code).first()
         if school_row is None:
             return {"message": "학교를 찾을 수 없습니다."}, 404
-        if school_row.verify_code is None:
-            return {"message": "학교 코드가 설정되지 않았습니다."}, 406
-        if school_row.verify_code != school_code:
-            return {"message": "학교코드가 일치하지 않습니다."}, 401
         return {
-            "message" : "학교코드가 일치합니다."
+            "message" : "학교코드가 일치합니다.",
+            "data" : {
+                "schoolId": school_row.school_id,
+                "schoolName": school_row.name,
+                "schoolRegion": school_row.region,
+                "schoolAddress" : school_row.address
+            }
         }, 200
+        # if not school_id:
+        #     return {"message": "학교ID가 입력되지 않았습니다."}, 400
+        # school_code = request.args.get("schoolCode")
+        # if school_code is None:
+        #     return {"message": "학교코드가 입력되지 않았습니다."}, 400
+        #
+        # school_row = School.query.filter_by(school_id=school_id).first()
+        # if school_row is None:
+        #     return {"message": "학교를 찾을 수 없습니다."}, 404
+        # if school_row.verify_code is None:
+        #     return {"message": "학교 코드가 설정되지 않았습니다."}, 406
+        # if school_row.verify_code != school_code:
+        #     return {"message": "학교코드가 일치하지 않습니다."}, 401
+        # return {
+        #     "message" : "학교코드가 일치합니다."
+        # }, 200

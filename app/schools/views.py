@@ -8,4 +8,4 @@ api = Api(schools_bp)
 
 
 api.add_resource(_Schools, '')
-api.add_resource(_SchoolCode, '/code-verify/', '/code-verify/<string:school_id>')
+api.add_resource(_SchoolCode, '/code-verify/', '/code-verify/<string:school_code>')
