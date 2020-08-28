@@ -27,6 +27,7 @@ def is_number_contain(menu):
         add_target_word_list(menu["menu"])
 
 
+
 with open('전국 고등학교 급식 데이터.pickle', 'rb') as fr:
     schools = pickle.load(fr)
 
