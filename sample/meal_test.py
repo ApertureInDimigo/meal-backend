@@ -42,7 +42,7 @@ for school in schools:
         for time in school["data"][day]:
             for menu in school["data"][day][time]:
                 # is_end_target_word(menu)
-                # is_number_contain(menu)
+                # is_number_contain({"menu" : menu, "schoolName" : school["schoolName"]})
                 is_contain_word({"menu" : menu, "schoolName" : school["schoolName"]})
 
 if type(target_word_list) == set:
