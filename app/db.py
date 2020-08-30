@@ -70,11 +70,11 @@ class MenuRating(db.Model):
     menu_name = db.Column(db.String(30), nullable=False)
     menu_date = db.Column(db.DateTime, nullable=False)
 
-    rating = db.Column(db.Integer, nullable=True)
-    comment_content = db.Column(db.Integer, nullable=True)
+    star = db.Column(db.Integer, nullable=True)
+    comment = db.Column(db.String(100), nullable=True)
 
 
     banned = db.Column(db.Boolean, nullable=False)
 
-    comment_date = db.Column(db.DateTime, nullable=False)
+    rating_date = db.Column(db.DateTime, nullable=False)
 
