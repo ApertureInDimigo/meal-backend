@@ -55,6 +55,9 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
             temp = re.sub("^[a-z]", "", temp)  # 문자열 맨 앞의 소문자 알파벳 제거
             temp = re.sub("^/+", "", temp)
 
+            temp = re.sub("\d*$","",temp)
+            temp = re.sub("/$","",temp)
+
             return temp
 
 
