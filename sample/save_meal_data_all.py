@@ -43,6 +43,18 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
             temp = re.sub("\([^)]*\)|[0-9]*\.", '', str) #알레르기 제거
             temp = re.sub("[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"A-Za-z]+$", "", temp) #연속되는 의미없는 특수문자 제거
             temp = re.sub("[^가-힣a-zA-Z0-9&+/]", "", temp) #    &+/  외 특수문자 제거
+            if re.compile("^\d+[^색|단|번|곡|종|ml|L|월|\d].*").match(temp):
+                temp = re.sub("^[0-9]","",temp)
+
+            temp = re.sub("^[a-z]","",temp)         #문자열 맨 앞의 소문자 알파벳 제거
+            temp = re.sub("^[&|\+]","",temp)      #문자열 맨 앞의 & + / 제거
+            temp = re.sub("^/+","",temp)
+
+            if re.compile("^\d+[^색|단|번|곡|종|ml|L|월|\d].*").match(temp):
+                temp = re.sub("^[0-9]","",temp)
+            temp = re.sub("^[a-z]", "", temp)  # 문자열 맨 앞의 소문자 알파벳 제거
+            temp = re.sub("^/+", "", temp)
+
             return temp
 
 
