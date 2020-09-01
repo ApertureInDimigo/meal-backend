@@ -7,7 +7,7 @@ import clipboard
 
 
 target_word_list = set()
-target_word = "덮밥"
+target_word = "닭갈비"
 def add_target_word_list(data):
     if type(target_word_list) == set:
         target_word_list.add(data)
