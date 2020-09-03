@@ -58,15 +58,18 @@ class School(db.Model):
 
 class MenuRating(db.Model):
 
-    comment_seq = db.Column(db.Integer, primary_key=True, nullable=False)
+    rating_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
 
 
-    school = relationship("School", backref=backref('menurating', order_by=comment_seq))
-    student = relationship("Student", backref=backref('menurating', order_by=comment_seq))
+    school = relationship("School", backref=backref('menurating', order_by=rating_seq))
+    student = relationship("Student", backref=backref('menurating', order_by=rating_seq))
 
+
+
+    menu_seq = db.Column(db.Integer, nullable=True)
     menu_name = db.Column(db.String(30), nullable=False)
     menu_date = db.Column(db.DateTime, nullable=False)
 
@@ -77,4 +80,44 @@ class MenuRating(db.Model):
     banned = db.Column(db.Boolean, nullable=False)
 
     rating_date = db.Column(db.DateTime, nullable=False)
+
+
+
+
+class MealBoard(db.Model):
+
+    post_seq =  db.Column(db.Integer, primary_key=True, nullable=False)
+
+    school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
+    student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
+    school = relationship("School", backref=backref('mealboard', order_by=post_seq))
+    student = relationship("Student", backref=backref('mealboard', order_by=post_seq))
+
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.String(1000), nullable=False)
+
+    menus = db.Column(db.JSON, nullable=False)
+    menu_date = db.Column(db.DateTime, nullable=False)
+
+    image_url = db.Column(db.String(500), nullable=True)
+
+
+    banned = db.Column(db.Boolean, nullable=False)
+
+    post_date = db.Column(db.DateTime, nullable=False)
+
+
+
+
+class MealBoardLikes(db.Model):
+
+    like_seq =  db.Column(db.Integer, primary_key=True, nullable=False)
+
+    post = relationship("MealBoard", backref=backref('menuRatingLikes', order_by=like_seq))
+    post_seq = db.Column(db.Integer, ForeignKey('meal_board.post_seq'), nullable=False)
+
+
+
+
+    like_date = db.Column(db.DateTime, nullable=False)
 
