@@ -140,7 +140,7 @@ class KakaoRegister(Resource):
         if user_info is not None:
             try:
 
-                args["id"] = "sampleid123"
+                args["id"] = "abc@naver.com"
                 args["password"] = "samplepw987!"
                 # 카카오 회원가입에서 아이디와 비밀번호를 받지 않으므로 ValidationError 가 발생하지 않게 임의로 넣어줍니다.
                 print(args)
