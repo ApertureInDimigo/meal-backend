@@ -5,10 +5,7 @@ import os
 
 hostname = socket.gethostname()
 isLocal = True
-if hostname[:7] == "DESKTOP":
-    isLocal = True
-else:
-    isLocal = False
+
 
 if isLocal:
     print("local")
