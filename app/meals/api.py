@@ -10,7 +10,7 @@ from marshmallow import Schema, fields, pprint, validate
 
 from app.meals.form import RatingStarSchema, MenuDateSchema
 from app.students.form import *
-from werkzeug import ImmutableMultiDict
+
 from flask import request, g
 import requests
 import json
