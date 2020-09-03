@@ -8,7 +8,6 @@ from flask_restful import Resource, reqparse
 import bcrypt
 from marshmallow import Schema, fields, pprint, validate
 from app.students.form import *
-from werkzeug import ImmutableMultiDict
 from flask import request, g
 import requests
 import json
