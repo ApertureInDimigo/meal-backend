@@ -4,6 +4,7 @@ import json
 import re
 import clipboard
 
+from . import menu_classifier
 
 
 target_word_list = set()
@@ -53,4 +54,5 @@ for menu in target_word_list:
     print(menu)
     # print(menu.split("뿌링클"))
 print(len(target_word_list))
+
 clipboard.copy("\n".join(target_word_list))

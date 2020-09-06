@@ -17,7 +17,7 @@ def is_regex(str):
     else:
         return False
 
-def clssify_menu(menu):
+def classify_menu(menu):
     for t in Carb:
         if t in menu:
             return "탄수화물(밥/면)"
