@@ -4,10 +4,11 @@ import json
 import re
 import clipboard
 
-
+#from . import menu_classifier
+from sample import menu_classifier
 
 target_word_list = set()
-target_word = "닭갈비"
+target_word = "차"
 def add_target_word_list(data):
     if type(target_word_list) == set:
         target_word_list.add(data)
@@ -50,7 +51,8 @@ if type(target_word_list) == set:
     target_word_list.sort()
 
 for menu in target_word_list:
-    print(menu)
+    print(menu,end=" ")
+    print(menu_classifier.classify_menu(menu))
     # print(menu.split("뿌링클"))
 print(len(target_word_list))
 clipboard.copy("\n".join(target_word_list))
