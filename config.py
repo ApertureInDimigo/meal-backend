@@ -5,7 +5,10 @@ import os
 
 hostname = socket.gethostname()
 isLocal = True
-if hostname[:7] == "DESKTOP":
+
+#Chuns-MacBook-Air.local
+
+if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
     isLocal = True
 else:
     isLocal = False

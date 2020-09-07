@@ -23,7 +23,7 @@ class Student(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     student_seq = db.Column(db.Integer, primary_key=True, nullable=False)
-    id = db.Column(db.String(20), nullable=True)
+    id = db.Column(db.String(50), nullable=True)
     password = db.Column(db.String(100), nullable=True)
     password_salt = db.Column(db.String(100), nullable=True)
     nickname = db.Column(db.String(20), nullable=False)
