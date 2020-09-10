@@ -4,7 +4,8 @@ import datetime
 import requests
 import json
 
-from app.db import Student
+from app.db import Student, MealRatingQuestion
+from sample.menu_classifier import classify_menu
 
 
 def get_region_code(region):
@@ -64,4 +65,17 @@ def get_identify(student_id):
     return student, school
 
 
+def get_question_rows(menu):
+    category = classify_menu(menu)
+    question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None,
+                                                       category=category).order_by(
+        MealRatingQuestion.priority.desc(),
+        MealRatingQuestion.add_date.desc()).all()
+    return question_rows
 
+
+def dict_mean(dict_list):
+    mean_dict = {}
+    for key in dict_list[0].keys():
+        mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+    return mean_dict

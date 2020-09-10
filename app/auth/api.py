@@ -59,7 +59,7 @@ class Auth(Resource):
                             "schoolClass": row.school_class
                         }
                     },
-                "exp": datetime.utcnow() + timedelta(seconds=60 * 60 * 3)
+                "exp": datetime.utcnow() + timedelta(seconds=60 * 60 * 24 * 7)
             }
 
             token = jwt.encode(payload, SECRET_KEY, "HS256").decode("UTF-8")

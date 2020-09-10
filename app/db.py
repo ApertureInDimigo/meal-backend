@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import ForeignKey
 
 
-
 class CustomModel(Model):
     def as_dict(self):
         temp = {}
@@ -36,15 +35,11 @@ class Student(db.Model):
 
     kakao_id = db.Column(db.String(20), nullable=True)
 
-
-
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     school = relationship("School", backref=backref('student', order_by=student_seq))
 
 
-
 class School(db.Model):
-
     school_seq = db.Column(db.Integer, primary_key=True, nullable=False)
     school_id = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(50), nullable=False)
@@ -55,38 +50,29 @@ class School(db.Model):
     type = db.Column(db.String(10), nullable=False)
 
 
-
 class MenuRating(db.Model):
-
     rating_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
 
-
     school = relationship("School", backref=backref('menurating', order_by=rating_seq))
     student = relationship("Student", backref=backref('menurating', order_by=rating_seq))
-
-
 
     menu_seq = db.Column(db.Integer, nullable=True)
     menu_name = db.Column(db.String(30), nullable=False)
     menu_date = db.Column(db.DateTime, nullable=False)
 
     star = db.Column(db.Integer, nullable=True)
-    comment = db.Column(db.String(100), nullable=True)
-
+    questions = db.Column(db.JSON, nullable=True)
 
     banned = db.Column(db.Boolean, nullable=False)
 
     rating_date = db.Column(db.DateTime, nullable=False)
 
 
-
-
 class MealBoard(db.Model):
-
-    post_seq =  db.Column(db.Integer, primary_key=True, nullable=False)
+    post_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
@@ -101,23 +87,35 @@ class MealBoard(db.Model):
 
     image_url = db.Column(db.String(500), nullable=True)
 
-
     banned = db.Column(db.Boolean, nullable=False)
 
     post_date = db.Column(db.DateTime, nullable=False)
 
 
-
-
 class MealBoardLikes(db.Model):
-
-    like_seq =  db.Column(db.Integer, primary_key=True, nullable=False)
+    like_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
     post = relationship("MealBoard", backref=backref('menuRatingLikes', order_by=like_seq))
     post_seq = db.Column(db.Integer, ForeignKey('meal_board.post_seq'), nullable=False)
 
-
-
-
     like_date = db.Column(db.DateTime, nullable=False)
 
+
+class MealRatingQuestion(db.Model):
+    question_seq = db.Column(db.Integer, primary_key=True, nullable=False)
+
+    school = relationship("School", backref=backref('MealRatingQuestion', order_by=question_seq))
+    school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=True)
+
+    content = db.Column(db.String, nullable=False)
+
+    options = db.Column(db.JSON, nullable = True)
+
+
+    category = db.Column(db.String, nullable=True)
+
+    is_available = db.Column(db.Boolean, nullable=False)
+
+    priority = db.Column(db.Integer, nullable=False)
+
+    add_date = db.Column(db.DateTime, nullable=False)

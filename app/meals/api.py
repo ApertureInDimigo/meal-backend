@@ -8,7 +8,8 @@ from flask_restful import Resource, reqparse
 import bcrypt
 from marshmallow import Schema, fields, pprint, validate
 
-from app.meals.form import RatingStarSchema, MenuDateSchema
+from app.meals.form import RatingStarSchema, MenuDateSchema, RatingQuestionSchema, \
+    MenuDateSeqSchema
 from app.students.form import *
 
 from flask import request, g
@@ -19,6 +20,8 @@ from datetime import datetime
 from statistics import mean
 import numpy as np
 from collections import defaultdict
+
+from sample.menu_classifier import classify_menu
 
 
 class _RatingStar(Resource):
@@ -43,10 +46,9 @@ class _RatingStar(Resource):
             return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
 
         rating_rows = MenuRating.query.filter_by(school=school, menu_date=str_to_date(args["menu_date"]),
-                                                 banned=False).all()
+                                                 banned=False).filter(MenuRating.star.isnot(None)).all()
 
         rating_data = defaultdict(list)
-
 
         anal_result = list()
 
@@ -57,13 +59,13 @@ class _RatingStar(Resource):
             rating_list = rating_data[menu_seq]
 
             anal_result.append({
-                "menuSeq" : menu_seq,
-                "menuName" : rating_list[0].menu_name,
-                "averageStar" : mean([rating.star for rating in rating_list])
+                "menuSeq": menu_seq,
+                "menuName": rating_list[0].menu_name,
+                "averageStar": mean([rating.star for rating in rating_list])
             })
 
         return {
-            "data" : anal_result
+            "data": anal_result
         }
 
     @login_required
@@ -124,26 +126,161 @@ class _RatingStar(Resource):
         return {
                    "message": "정상적으로 처리되었습니다."
                }, 200
-    #
-    #     print(str_to_date(args["menuDate"]))
-    #
-    #     rating_row = MenuRating.query.filter_by(school=school, student=student, menu_name=args["menuName"],
-    #                                             menu_date=str_to_date(args["menuDate"])) \
-    #         .filter(MenuRating.star.isnot(None)).first()
-    #     if rating_row is not None:
-    #         return {"message": "이미 평가한 메뉴입니다."}, 404
-    #
-    #     rating_row = MenuRating(
-    #         school = school,
-    #         student = student,
-    #         menu_name= args["menuName"],
-    #         menu_date = str_to_date(args["menuDate"]),
-    #         star = args["star"],
-    #         banned = False,
-    #         rating_date = datetime.now()
-    #     )
-    #     db.session.add(rating_row)
-    #     db.session.commit()
-    #
-    #
-    #     return lunch_meal_data
+
+
+class _RatingQuestion(Resource):
+
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.get_json()
+
+        try:
+            args = MenuDateSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+        lunch_meal_data = get_day_meal(school, args["menu_date"])
+
+        question_dict = []
+
+        for index, menu in enumerate(lunch_meal_data):
+            category = classify_menu(menu)
+            question_rows = get_question_rows(menu)
+            question_dict.append({
+                "menuSeq": index,
+                "menuName": menu,
+                "category": category,
+                "questions": [
+                    {
+                        "questionSeq": question_row.question_seq,
+                        "content": question_row.content,
+                        "options": question_row.options
+                    }
+
+                    for question_row in question_rows]})
+
+        return {
+            "data": question_dict
+        }
+
+
+class _RatingAnswer(Resource):
+
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.get_json()
+
+        try:
+            args = MenuDateSeqSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
+            .filter(MenuRating.questions.isnot(None)).first()
+        if old_rating_row is None:
+            return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+        from sqlalchemy.orm import load_only
+        rating_rows = MenuRating.query.options(
+            load_only("menu_name", "questions")
+        ).filter_by(
+            school=school, menu_date=str_to_date(args["menu_date"]),
+            menu_seq=args["menu_seq"],
+            banned=False).filter(MenuRating.questions.isnot(None)).all()
+
+        answer_results = dict_mean([rating_row.questions for rating_row in rating_rows])
+        print(answer_results)
+        return {
+                   "data": {
+                       "menuSeq": args["menu_seq"],
+                       "menuName": rating_rows[0].menu_name,
+                       "answers":
+                           [{"questionSeq": int(question_seq), "answerMean": answer_mean,
+                             "options": MealRatingQuestion.query.filter_by(question_seq=question_seq).first().options}
+                            for question_seq, answer_mean in answer_results.items()],
+
+                   }
+               }, 200
+
+    @login_required
+    def post(self):
+        student_id = g.user_id
+        args = request.get_json()
+
+        try:
+            args = RatingQuestionSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+
+        menu = args["menu"]
+        menu_seq = menu["menu_seq"]
+        # menu_name = menu["menu_name"]
+        questions = menu["questions"]
+
+        lunch_meal_data = get_day_meal(school, args["menu_date"])
+
+        if not (0 <= menu_seq <= len(lunch_meal_data) - 1):
+            return {"message": "급식을 찾을 수 없습니다."}, 404
+
+        menu_name = lunch_meal_data[menu_seq]
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student, menu_seq=menu_seq,
+                                                    menu_date=str_to_date(args["menu_date"])) \
+            .filter(MenuRating.questions.isnot(None)).first()
+        if old_rating_row is not None:
+            return {"message": "이미 평가했습니다."}, 409
+
+        question_rows = get_question_rows(menu_name)
+
+        now = datetime.now()
+
+        if len(question_rows) != len(questions):
+            return {"message": "잘못된 질문입니다."}, 404
+
+        for question in questions:
+            # if question["question_seq"] in [question_row.question_seq for question_row in question_rows]:
+
+            try:
+                target_question_row = \
+                    [question_row for question_row in question_rows if
+                     question_row.question_seq == question["question_seq"]][0]
+
+            except Exception as e:
+                return {"message": "잘못된 질문입니다."}, 404
+
+            if not (1 <= question["answer"] <= len(target_question_row.options)):
+                return {"message": "질문에 대한 잘못된 응답입니다."}, 404
+
+        rating_row = MenuRating(
+            school=school,
+            student=student,
+            menu_seq=menu_seq,
+            menu_name=menu_name,
+            menu_date=str_to_date(args["menu_date"]),
+            questions={
+                str(question["question_seq"]): question["answer"] for question in questions
+            },
+            banned=False,
+            rating_date=now
+        )
+
+        print(rating_row)
+
+        db.session.add(rating_row)
+        db.session.commit()
+
+        return {
+                   "message": "정상적으로 처리되었습니다."
+               }, 200
+
+        # for question in questions:
