@@ -69,7 +69,7 @@ def return_500_if_errors(f):
                             "color": 14177041
                         },
                         {
-                            "title": str(datetime.now()) + ", " + "로컬에서 발생" if is_local() else "헤로쿠에서 발생",
+                            "title": str(datetime.now()) + ", " + ("로컬에서 발생" if is_local() else "헤로쿠에서 발생"),
                             "color": 0
                         },
 
@@ -80,10 +80,12 @@ def return_500_if_errors(f):
 
 
 
+            response = {
+                "message" : "error"
+            }
 
 
 
-
-            return "error", 500
+            return response, 500
 
     return wrapper
