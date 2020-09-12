@@ -22,7 +22,7 @@ def create_app(config_filename):
     else:
         cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
         print(os.environ.get('FIREBASE_CONFIG', None))
-        firebase = firebase_admin.initialize_app(cred)
+        firebase = firebase_admin.initialize_app(credentials.Certificate(cred))
 
 
 
