@@ -42,6 +42,9 @@ import traceback
 import requests
 from datetime import datetime
 import threading
+import socket
+import os
+
 
 
 def return_500_if_errors(f):
@@ -51,7 +54,7 @@ def return_500_if_errors(f):
         except Exception as e:
             print(f)
             error_message = traceback.format_exc()
-
+            ip_address =  request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
             webhook_body = {
 
                     "embeds": [
@@ -69,7 +72,7 @@ def return_500_if_errors(f):
                             "color": 14177041
                         },
                         {
-                            "title": str(datetime.now()) + ", " + ("로컬에서 발생" if is_local() else "헤로쿠에서 발생"),
+                            "title": str(datetime.now()) + ", " + ("로컬에서 발생" if is_local() else "외부에서 발생") + ", " + ip_address,
                             "color": 0
                         },
 
