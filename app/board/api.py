@@ -4,14 +4,14 @@ import os
 from PIL import Image
 import uuid
 from app.board.form import MealBoardSchema
-from app.common.decorator import login_required
+from app.common.decorator import login_required, return_500_if_errors
 from app.common.function import get_day_meal, get_identify
 from app.db import *
 from flask_restful import Resource, reqparse
 import bcrypt
 from marshmallow import Schema, fields, pprint, validate
 from app.students.form import *
-from flask import request, g
+from flask import request, g, abort
 import requests
 import json
 from app.common.function import *
@@ -20,11 +20,12 @@ from datetime import datetime
 
 
 class _MealBoard(Resource):
-
+    @return_500_if_errors
     def get(self):
         # 글 리스트 전부 가져오기
-        pass
+        return [1,2,3,4,5][8]
 
+    @return_500_if_errors
     @login_required
     def post(self):
         student_id = g.user_id
@@ -98,17 +99,18 @@ class _MealBoard(Resource):
 
 class _MealBoardDetail(Resource):
 
+    @return_500_if_errors
     def get(self, post_seq):
         # post_seq번째 글만 가져옴
-        pass
+        return 0/0
 
+    @return_500_if_errors
     def delete(self, post_seq):
         # 글 삭제
         pass
 
 
 class _MealBoardLike(Resource):
-
+    @return_500_if_errors
     def post(self):
-        # 좋아요 / 좋아요 취소
         pass

@@ -35,6 +35,7 @@ if isLocal:
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = config['DEFAULT']['SECRET_KEY']
+    DISCORD_WEBHOOK_URL = config['DEFAULT']['DISCORD_WEBHOOK_URL']
 
 else:
     pg_db_username = 'yeah'
@@ -50,4 +51,8 @@ else:
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = os.environ.get('SECRET_KEY', None)
 
+    DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', None)
+
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+ADMIN_ID = os.environ.get('ADMIN_ID', None)
+ADMIN_PW = os.environ.get('ADMIN_PW', None)

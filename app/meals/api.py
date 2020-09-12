@@ -1,6 +1,6 @@
 import marshmallow
 
-from app.common.decorator import login_required
+from app.common.decorator import login_required, return_500_if_errors
 from app.common.function import *
 
 from app.db import *
@@ -25,7 +25,7 @@ from sample.menu_classifier import classify_menu
 
 
 class _RatingStar(Resource):
-
+    @return_500_if_errors
     @login_required
     def get(self):
         student_id = g.user_id
@@ -68,6 +68,7 @@ class _RatingStar(Resource):
             "data": anal_result
         }
 
+    @return_500_if_errors
     @login_required
     def post(self):
 
@@ -129,7 +130,7 @@ class _RatingStar(Resource):
 
 
 class _RatingQuestion(Resource):
-
+    @return_500_if_errors
     @login_required
     def get(self):
         student_id = g.user_id
@@ -168,7 +169,7 @@ class _RatingQuestion(Resource):
 
 
 class _RatingAnswer(Resource):
-
+    @return_500_if_errors
     @login_required
     def get(self):
         student_id = g.user_id
@@ -209,6 +210,7 @@ class _RatingAnswer(Resource):
                    }
                }, 200
 
+    @return_500_if_errors
     @login_required
     def post(self):
         student_id = g.user_id

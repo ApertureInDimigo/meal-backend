@@ -133,3 +133,6 @@ chrome-user-data
 /config.ini
 *.pickle
 *.zip
+
+
+heroku_migrate.py

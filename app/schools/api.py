@@ -1,5 +1,6 @@
 import marshmallow
 
+from app.common.decorator import return_500_if_errors
 from app.db import *
 from flask_restful import Resource, reqparse
 import bcrypt
@@ -14,7 +15,7 @@ from datetime import datetime
 
 
 class _Schools(Resource):
-
+    @return_500_if_errors
     def get(self):
         school_name = request.args.get("schoolName")
         print(school_name)
@@ -38,7 +39,7 @@ class _Schools(Resource):
 
 
 class _SchoolCode(Resource):
-
+    @return_500_if_errors
     def get(self, school_code=None):
         if not school_code or school_code == "":
             return {"message": "학교코드가 입력되지 않았습니다."}, 400

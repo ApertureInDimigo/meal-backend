@@ -1,5 +1,6 @@
 import marshmallow
 
+from app.common.decorator import return_500_if_errors
 from app.db import *
 from flask_restful import Resource, reqparse
 import bcrypt
@@ -14,7 +15,7 @@ from datetime import datetime
 
 
 class Students(Resource):
-
+    @return_500_if_errors
     def post(self):
         args = request.get_json()
         print(args)
@@ -87,7 +88,7 @@ class Students(Resource):
 
 
 class IdCheck(Resource):
-
+    @return_500_if_errors
     def get(self, id):
         # id = request.args.get("id")
         c = Student.query.filter_by(id=id).count()
@@ -103,7 +104,7 @@ class IdCheck(Resource):
 
 
 class NicknameCheck(Resource):
-
+    @return_500_if_errors
     def get(self, nickname):
         # nickname = request.args.get("nickname")
         c = Student.query.filter_by(nickname=nickname).count()

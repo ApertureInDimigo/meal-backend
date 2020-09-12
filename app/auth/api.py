@@ -1,5 +1,6 @@
 import marshmallow
 
+from app.common.decorator import return_500_if_errors
 from app.db import *
 from flask_restful import Resource, reqparse
 import bcrypt
@@ -17,6 +18,7 @@ import requests
 
 class Auth(Resource):
 
+    @return_500_if_errors
     def get(self):
         if request.headers.get('Authorization') is None:
             return {"message": "로그인 토큰이 필요합니다."}, 400
@@ -40,6 +42,7 @@ class Auth(Resource):
 
             return {"message": "로그인 토큰이 필요합니다."}, 400
 
+    @return_500_if_errors
     def post(self):
         args = request.get_json()
         row = Student.query.filter_by(id=args["id"]).first()
@@ -83,6 +86,8 @@ def verify_kakao_token(access_token):
 
 
 class KakaoLogin(Resource):
+
+    @return_500_if_errors
     def post(self):
         args = request.get_json()
         access_token = args["accessToken"]
@@ -124,6 +129,8 @@ class KakaoLogin(Resource):
 
 
 class KakaoRegister(Resource):
+
+    @return_500_if_errors
     def post(self):
         args = request.get_json()
         access_token = args["accessToken"]

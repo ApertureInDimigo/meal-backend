@@ -7,6 +7,9 @@ import json
 from app.db import Student, MealRatingQuestion
 from sample.menu_classifier import classify_menu
 
+from config import DISCORD_WEBHOOK_URL
+import asyncio
+
 
 def get_region_code(region):
     if region == "경기도":
@@ -93,3 +96,8 @@ def is_local():
         isLocal = False
 
     return isLocal
+
+def send_discord_webhook(webhook_body):
+    requests.post(
+        DISCORD_WEBHOOK_URL,
+        json=webhook_body)
