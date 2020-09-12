@@ -1,14 +1,14 @@
 import firebase_admin
 from firebase_admin import auth, storage
 from firebase_admin import credentials
-
+import os
 
 
 from flask import Flask, Response
 from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
 from app.common.function import *
-
+import json
 class MyResponse(Response):
     default_mimetype = 'application/xml'
 
@@ -20,7 +20,9 @@ def create_app(config_filename):
         cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
     else:
-        firebase = firebase_admin.initialize_app()
+        cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
+        print(os.environ.get('FIREBASE_CONFIG', None))
+        firebase = firebase_admin.initialize_app(cred)
 
 
 
