@@ -79,3 +79,17 @@ def dict_mean(dict_list):
     for key in dict_list[0].keys():
         mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
     return mean_dict
+
+
+def is_local():
+    import socket
+    import os
+
+    hostname = socket.gethostname()
+    isLocal = True
+    if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
+        isLocal = True
+    else:
+        isLocal = False
+
+    return isLocal

@@ -1,7 +1,13 @@
+import firebase_admin
+from firebase_admin import auth, storage
+from firebase_admin import credentials
+
+
+
 from flask import Flask, Response
 from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
-
+from app.common.function import *
 
 class MyResponse(Response):
     default_mimetype = 'application/xml'
@@ -9,6 +15,20 @@ class MyResponse(Response):
 
 # http://flask.pocoo.org/docs/0.10/patterns/appfactories/
 def create_app(config_filename):
+
+    if is_local() is True:
+        cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        firebase = firebase_admin.initialize_app(cred)
+    else:
+        firebase = firebase_admin.initialize_app()
+
+
+
+
+
+
+
+
     app = Flask(__name__, static_url_path='', static_folder='../static', template_folder='../static')
 
     app.config.from_object(config_filename)

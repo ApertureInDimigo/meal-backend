@@ -27,6 +27,11 @@ def is_number_contain(menu):
     if any(map(str.isdigit, menu["menu"])):
         add_target_word_list(menu["menu"])
 
+def test(menu):
+    if menu["menu"][-1] != "배" and "배" in menu["menu"]:
+        add_target_word_list(menu["menu"])
+
+
 
 with open('전국 고등학교 급식 데이터.pickle', 'rb') as fr:
     schools = pickle.load(fr)
