@@ -3,7 +3,7 @@ import marshmallow
 import os
 from PIL import Image
 import uuid
-from app.board.form import MealBoardSchema
+from app.board.form import MealBoardSchema, MealBoardGetListSchema
 from app.common.decorator import login_required, return_500_if_errors
 from app.common.function import get_day_meal, get_identify
 from app.db import *
@@ -22,8 +22,32 @@ from datetime import datetime
 class _MealBoard(Resource):
     @return_500_if_errors
     def get(self):
-        # 글 리스트 전부 가져오기
-        return [1,2,3,4,5][8]
+        args = request.args
+        print(args)
+        try:
+
+            args = MealBoardGetListSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        post_rows = MealBoard.query.filter_by(banned = False).limit(args["limit"]).offset(args["limit"] * args["page"]).all()
+        print(post_rows)
+
+        if len(post_rows) == 0:
+            return {
+                "message" : "글을 찾을 수 없습니다."
+            }, 404
+
+        return {
+            "data" : [{
+                "postSeq": post_row.post_seq,
+                "title": post_row.title,
+                "post_date": str(post_row.post_date),
+                "image_url": post_row.image_url
+            } for post_row in post_rows]
+        }, 200
+
 
     @return_500_if_errors
     @login_required

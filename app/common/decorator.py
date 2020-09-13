@@ -52,9 +52,17 @@ def return_500_if_errors(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
+
+            print(traceback.print_exc())
+
+
+
+
+
             print(f)
             error_message = traceback.format_exc()
             ip_address =  request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+            print(json.dumps(request.get_json()) or "null")
             webhook_body = {
 
                     "embeds": [
@@ -64,8 +72,25 @@ def return_500_if_errors(f):
 
                         },
                         {
-                            "title": str(f),
+                            "fields": [
+                                {
+                                    "name": "Function",
+                                    "value": str(f),
+                                    "inline": True
+                                },
+                                {
+                                    "name": "URI",
+                                    "value": request.url,
+                                    "inline": True
+                                },
+                                {
+                                    "name": "Request Body",
+                                    "value": json.dumps(request.get_json()) or "null"
+                                },
+
+                            ],
                             "color": 0
+
                         },
                         {
                             "description" : error_message,

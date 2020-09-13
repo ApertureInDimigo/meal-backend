@@ -9,3 +9,9 @@ class MealBoardSchema(Schema):
 
     title = fields.String(required=True, data_key="title")
     content = fields.String(required=True, data_key="content")
+
+
+class MealBoardGetListSchema(Schema):
+
+    page = fields.Integer(required=True, validate=validate.Range(min=0, max=999))
+    limit = fields.Integer(required=True ,validate=validate.Range(min=0, max=30))

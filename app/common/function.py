@@ -35,10 +35,17 @@ def remove_allergy(str):
     return temp
 
 
+
 def str_to_date(str):
     date = datetime.datetime.strptime(str, "%Y%m%d")
 
     return date
+
+def datetime_to_str(dt):
+    string = dt.strpttime("%m/%d/%Y, %H:%M:%S")
+    print(string)
+    return string
+
 
 
 def get_day_meal(school, date):
