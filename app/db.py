@@ -56,8 +56,8 @@ class MenuRating(db.Model):
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=False)
     student_seq = db.Column(db.Integer, ForeignKey('student.student_seq'), nullable=False)
 
-    school = relationship("School", backref=backref('menurating', order_by=rating_seq))
-    student = relationship("Student", backref=backref('menurating', order_by=rating_seq))
+    school = relationship("School", backref=backref('menurating', order_by=rating_seq, cascade='all,delete'))
+    student = relationship("Student", backref=backref('menurating', order_by=rating_seq, cascade='all,delete'))
 
     menu_seq = db.Column(db.Integer, nullable=True)
     menu_name = db.Column(db.String(30), nullable=False)
@@ -85,6 +85,9 @@ class MealBoard(db.Model):
     menus = db.Column(db.JSON, nullable=False)
     menu_date = db.Column(db.DateTime, nullable=False)
 
+    views = db.Column(db.Integer, nullable=False, server_default='0')
+
+
     image_url = db.Column(db.String(500), nullable=True)
 
     banned = db.Column(db.Boolean, nullable=False)
@@ -95,8 +98,12 @@ class MealBoard(db.Model):
 class MealBoardLikes(db.Model):
     like_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
-    post = relationship("MealBoard", backref=backref('menuRatingLikes', order_by=like_seq))
+    post = relationship("MealBoard", backref=backref('menuRatingLikes', order_by=like_seq, cascade='all,delete'))
     post_seq = db.Column(db.Integer, ForeignKey('meal_board.post_seq'), nullable=False)
+
+    student_seq = db.Column(db.Integer, ForeignKey('student.student_seq', ), nullable=False)
+    student = relationship("Student", backref=backref('mealboardlikes', order_by=like_seq, cascade='all,delete'))
+
 
     like_date = db.Column(db.DateTime, nullable=False)
 
@@ -104,7 +111,7 @@ class MealBoardLikes(db.Model):
 class MealRatingQuestion(db.Model):
     question_seq = db.Column(db.Integer, primary_key=True, nullable=False)
 
-    school = relationship("School", backref=backref('MealRatingQuestion', order_by=question_seq))
+    school = relationship("School", backref=backref('MealRatingQuestion', order_by=question_seq, cascade='all,delete'))
     school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=True)
 
     content = db.Column(db.String, nullable=False)

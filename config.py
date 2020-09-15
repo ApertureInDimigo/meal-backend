@@ -29,13 +29,17 @@ if isLocal:
                                                                                             DB_NAME=pg_db_name)
 
 
-    DEBUG = True
+    DEBUG = False
     PORT = 5000
     HOST = "0.0.0.0"
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = config['DEFAULT']['SECRET_KEY']
     DISCORD_WEBHOOK_URL = config['DEFAULT']['DISCORD_WEBHOOK_URL']
+
+    REDIS_URL = config['DEFAULT']['REDIS_URL']
+
+
 
 else:
     pg_db_username = 'yeah'
@@ -52,6 +56,13 @@ else:
     SECRET_KEY = os.environ.get('SECRET_KEY', None)
 
     DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', None)
+
+    REDIS_URL = os.environ.get('REDIS_URL', None)
+
+
+
+
+
 
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 ADMIN_ID = os.environ.get('ADMIN_ID', None)

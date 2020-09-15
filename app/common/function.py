@@ -4,11 +4,15 @@ import datetime
 import requests
 import json
 
-from app.db import Student, MealRatingQuestion
+from flask import copy_current_request_context
+
+from app.db import Student, MealRatingQuestion, MealBoard
 from sample.menu_classifier import classify_menu
 
 from config import DISCORD_WEBHOOK_URL
 import asyncio
+from app.redis import rd
+from app.db import db
 
 
 def get_region_code(region):
@@ -108,3 +112,46 @@ def send_discord_webhook(webhook_body):
     requests.post(
         DISCORD_WEBHOOK_URL,
         json=webhook_body)
+
+
+# @copy_current_request_context
+def update_meal_board_views():
+    # from run import app
+    # with app.app_context:
+        print("start!")
+        post_seq_list = []
+        view_count_list = []
+        for key in rd.scan_iter(match="views:*"):
+            post_seq = int(key.decode("utf-8").split("views:")[1])
+            post_seq_list.append(post_seq)
+
+            student_seq_list = rd.smembers(key)
+
+            view_count_list.append(len(student_seq_list))
+            for student_seq in student_seq_list:
+
+                rd.set("pviews:" + str(post_seq) + "-" + str(int(student_seq)), 1, datetime.timedelta(seconds=60 * 60))
+
+
+            rd.delete(key)
+
+
+        print(post_seq_list)
+        print(view_count_list)
+
+        post_rows = MealBoard.query.filter(MealBoard.post_seq.in_(post_seq_list)).all()
+
+        for index, post_row in enumerate(post_rows):
+            post_row.views = post_row.views + view_count_list[index]
+            print(post_row.views)
+        db.session.commit()
+
+
+
+
+
+
+
+
+
+

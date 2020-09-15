@@ -24,6 +24,12 @@ import flask_admin.contrib.sqla
 # http://flask.pocoo.org/docs/0.10/patterns/appfactories/
 def create_app(config_filename):
 
+    import app.cache
+    from app.scheduler import sched
+    # from app.redis import redis_client
+    import app.redis
+
+
     if is_local() is True:
         cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
@@ -39,6 +45,7 @@ def create_app(config_filename):
 
 
 
+
     app = Flask(__name__, static_url_path='', static_folder='../static', template_folder='../static')
 
     app.config.from_object(config_filename)
@@ -46,6 +53,10 @@ def create_app(config_filename):
 
     from app.db import db, Student, School, MealRatingQuestion, MenuRating , MealBoardLikes, MealBoard
     db.init_app(app)
+    db.app = app
+    # sched.init_app(app)
+    # redis_client.init_app(app)
+
 
     # Blueprints
     from app.auth.views import auth_bp
@@ -61,6 +72,23 @@ def create_app(config_filename):
     app.register_blueprint(meals_bp, url_prefix='/api/meals')
     app.register_blueprint(board_bp, url_prefix='/api/board')
 
+    # sched.add_job(lambda: update_meal_board_views(), 'cron', second='05', id="update_meal_board_views")
+    def update_meal_board_views():
+        # from run import app
+        with app.app_context():
+            print("start!")
+            post_seq_list = []
+            view_count_list = []
+            for key in rd.scan_iter(match="views:*"):
+                post_seq_list.append(int(key.decode("utf-8").split("views:")[1]))
+                view_count_list.append(len(rd.smembers(key)))
+            print(post_seq_list)
+            print(view_count_list)
+
+            post_rows = MealBoard.query.filter(MealBoard.post_seq in post_seq_list).all()
+            for index, post_row in enumerate(post_rows):
+                post_row.views += view_count_list[index]
+            db.session.commit()
 
     if not is_local():
 

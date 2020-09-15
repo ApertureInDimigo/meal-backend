@@ -7,6 +7,7 @@ from app.common.function import *
 
 import asyncio
 
+
 def login_required(f):  # 1)
     @wraps(f)  # 2)
     def decorated_function(*args, **kwargs):
@@ -46,7 +47,6 @@ import socket
 import os
 
 
-
 def return_500_if_errors(f):
     def wrapper(*args, **kwargs):
         try:
@@ -54,65 +54,62 @@ def return_500_if_errors(f):
         except Exception as e:
 
             print(traceback.print_exc())
-
-
-
-
+            if is_local():
+                return {
+                           "message": "error"
+                       }, 500
 
             print(f)
             error_message = traceback.format_exc()
-            ip_address =  request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+            ip_address = request.headers[
+                'X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
             print(json.dumps(request.get_json()) or "null")
             webhook_body = {
 
-                    "embeds": [
-                        {
-                            "title": "=========ERROR=========",
-                            "color": 14177041
+                "embeds": [
+                    {
+                        "title": "=========ERROR=========",
+                        "color": 14177041
 
-                        },
-                        {
-                            "fields": [
-                                {
-                                    "name": "Function",
-                                    "value": str(f),
-                                    "inline": True
-                                },
-                                {
-                                    "name": "URI",
-                                    "value": request.url,
-                                    "inline": True
-                                },
-                                {
-                                    "name": "Request Body",
-                                    "value": json.dumps(request.get_json()) or "null"
-                                },
+                    },
+                    {
+                        "fields": [
+                            {
+                                "name": "Function",
+                                "value": str(f),
+                                "inline": True
+                            },
+                            {
+                                "name": "URI",
+                                "value": request.url,
+                                "inline": True
+                            },
+                            {
+                                "name": "Request Body",
+                                "value": json.dumps(request.get_json()) or "null"
+                            },
 
-                            ],
-                            "color": 0
+                        ],
+                        "color": 0
 
-                        },
-                        {
-                            "description" : error_message,
-                            "color": 14177041
-                        },
-                        {
-                            "title": str(datetime.now()) + ", " + ("로컬에서 발생" if is_local() else "외부에서 발생") + ", " + ip_address,
-                            "color": 0
-                        },
+                    },
+                    {
+                        "description": error_message,
+                        "color": 14177041
+                    },
+                    {
+                        "title": str(datetime.now()) + ", " + (
+                            "로컬에서 발생" if is_local() else "외부에서 발생") + ", " + ip_address,
+                        "color": 0
+                    },
 
-
-                    ]
-                }
+                ]
+            }
             threading.Thread(target=lambda: send_discord_webhook(webhook_body=webhook_body)).start()
 
-
-
             response = {
-                "message" : "error"
+                "message": "error"
             }
-
-
 
             return response, 500
 
