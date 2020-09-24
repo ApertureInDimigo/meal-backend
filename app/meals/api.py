@@ -101,12 +101,12 @@ class _RatingStar(Resource):
         now = datetime.now()
         for index, menu in enumerate(menus):
             if menu["menu_name"] in lunch_meal_data:
-                if 1 <= menu["star"] <= 5 and menu["menu_name"] == lunch_meal_data[index] and menu["menu_seq"] == index:
+                if 1 <= menu["star"] <= 5 and menu["menu_seq"] == index:
                     rating_row = MenuRating(
                         school=school,
                         student=student,
                         menu_seq=menu["menu_seq"],
-                        menu_name=menu["menu_name"],
+                        menu_name=lunch_meal_data[index],
                         menu_date=str_to_date(args["menu_date"]),
                         star=menu["star"],
                         banned=False,

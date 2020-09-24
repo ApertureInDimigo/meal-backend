@@ -31,6 +31,10 @@ class Student(db.Model):
     register_date = db.Column(db.DateTime, nullable=False)
     point = db.Column(db.Integer, nullable=False)
 
+    school_verified = db.Column(db.Boolean, nullable= False, server_default='False')
+
+
+
     gender = db.Column(db.String(10), nullable=True)
 
     kakao_id = db.Column(db.String(20), nullable=True)

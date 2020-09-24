@@ -8,7 +8,7 @@ import clipboard
 from sample import menu_classifier
 
 target_word_list = set()
-target_word = "배"
+target_word = "색시"
 def add_target_word_list(data):
     if type(target_word_list) == set:
         target_word_list.add(data)
@@ -47,6 +47,8 @@ for school in schools:
     for day in school["data"]:
         for time in school["data"][day]:
             for menu in school["data"][day][time]:
+                print(menu)
+
                 # is_end_target_word(menu)
                 # is_number_contain({"menu" : menu, "schoolName" : school["schoolName"]})
                 is_contain_word({"menu" : menu, "schoolName" : school["schoolName"]})

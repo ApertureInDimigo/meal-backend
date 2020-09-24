@@ -59,10 +59,16 @@ class Students(Resource):
 
             print(school_row.school_seq)
 
+        school_verified = None
         if school_row.verify_code is not None:
             if "school_code" not in data or data["school_code"] != school_row.verify_code:
-                return {"message": "학교 인증 코드가 일치하지 않습니다."}, 403
+                school_verified = False
+            else:
+                school_verified = True
 
+                # return {"message": "학교 인증 코드가 일치하지 않습니다."}, 403
+        else:
+            school_verified = False
         password_salt = bcrypt.gensalt()
         # print(salt)
 
@@ -75,6 +81,7 @@ class Students(Resource):
             school_class=data["school_class"],
             register_date=datetime.now(),
             point=0,
+            school_verified=school_verified,
             school_seq=school_row.school_seq
         )
         db.session.add(student_row)
