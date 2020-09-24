@@ -8,7 +8,7 @@ import clipboard
 from sample import menu_classifier
 
 target_word_list = set()
-target_word = "색시"
+target_word = "찹"
 def add_target_word_list(data):
     if type(target_word_list) == set:
         target_word_list.add(data)
