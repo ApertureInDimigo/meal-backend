@@ -7,13 +7,13 @@ import json
 from flask import copy_current_request_context
 
 from app.db import Student, MealRatingQuestion, MealBoard
-from sample.menu_classifier import classify_menu
+from sample.menu_classifier import classify_menu, get_menu_category_list
 
 from config import DISCORD_WEBHOOK_URL
 import asyncio
 from app.redis import rd
 from app.db import db
-
+import sqlalchemy
 
 def get_region_code(region):
     if region == "경기도":
@@ -80,11 +80,11 @@ def get_identify(student_id):
 
 
 def get_question_rows(menu):
-    category = classify_menu(menu)
-    question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None,
-                                                       category=category).order_by(
+    category_list = get_menu_category_list(menu)
+    question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None,).filter(MealRatingQuestion.category.in_(category_list)).order_by(
         MealRatingQuestion.priority.desc(),
         MealRatingQuestion.add_date.desc()).all()
+    print(question_rows)
     return question_rows
 
 

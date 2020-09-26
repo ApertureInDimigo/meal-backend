@@ -63,43 +63,29 @@ def classify_menu(menu):
     return "type_4"
 
 
-def CATegory_transact(menu):
-    category = ""
-    for t in Noodle:
-        if t in menu:
-            category += "면 "
-            break
+def get_menu_category_list(menu):
+    category_result = []
 
-    for t in Spicy:
-        if is_regex(t):
-            if re.compile(t).match(menu):
-                category += "맵 "
+    category_list = ["면", "밥", "국", "과일", "후식", "매운", "튀김", "육류", "생선"]
+    regex_list = [Noodle, Carb, Soup, Fruit, Desert, Spicy, Fry, Meat, Fish]
+
+    for category, regex in zip(category_list, regex_list):
+        for t in regex:
+            if is_regex(t):
+
+                if re.compile(t).match(menu):
+                    category_result.append(category)
+                    print(t, menu, category)
+                    break
+            elif t in menu:
+                category_result.append(category)
+                print(t, menu, category)
                 break
-        elif t in menu:
-            category += "맵 "
-            break
 
-    for t in Fry:
-        if is_regex(t):
-            if re.compile(t).match(menu):
-                category += "튀 "
-                break
-        elif t in menu:
-            category += "튀 "
-            break
+    if not any((category in category_result) for category in ["면", "밥", "국", "과일", "후식"]):
+        category_result.insert(0, "반찬")
 
-    for t in Meat:
-        if is_regex(t):
-            if re.compile(t).match(menu):
-                category += "육 "
-                break
-        elif t in menu:
-            category += "육 "
-            break
+    return category_result
 
-    for t in Fish:
-        if t in menu:
-            category += "물 "
-            break
 
-    return category
+print(get_menu_category_list("배추겉절이"))

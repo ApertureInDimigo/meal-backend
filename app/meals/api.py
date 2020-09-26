@@ -148,7 +148,7 @@ class _RatingQuestion(Resource):
         question_dict = []
 
         for index, menu in enumerate(lunch_meal_data):
-            category = classify_menu(menu)
+            category = get_menu_category_list(menu)
             question_rows = get_question_rows(menu)
             question_dict.append({
                 "menuSeq": index,
