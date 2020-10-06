@@ -29,7 +29,8 @@ class _Menu(Resource):
     @login_required
     def get(self):
         student_id = g.user_id
-        args = request.get_json()
+        args = request.args
+        print(args)
 
         try:
             args = MenuDateSchema().load(args)
@@ -49,8 +50,8 @@ class _RatingStar(Resource):
     @login_required
     def get(self):
         student_id = g.user_id
-        args = request.get_json()
-
+        args = request.args
+        print(args)
         try:
             args = MenuDateSchema().load(args)
         except marshmallow.exceptions.ValidationError as e:
@@ -154,7 +155,8 @@ class _RatingQuestion(Resource):
     @login_required
     def get(self):
         student_id = g.user_id
-        args = request.get_json()
+        args = request.args
+        print(args)
 
         try:
             args = MenuDateSchema().load(args)
@@ -193,7 +195,8 @@ class _RatingAnswer(Resource):
     @login_required
     def get(self):
         student_id = g.user_id
-        args = request.get_json()
+        args = request.args
+        print(args)
 
         try:
             args = MenuDateSeqSchema().load(args)
