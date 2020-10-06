@@ -24,6 +24,26 @@ from collections import defaultdict
 from sample.menu_classifier import classify_menu
 
 
+class _Menu(Resource):
+    @return_500_if_errors
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.get_json()
+
+        try:
+            args = MenuDateSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        return {
+            "data": lunch_meal_data
+        }
+
+
 class _RatingStar(Resource):
     @return_500_if_errors
     @login_required
@@ -100,8 +120,8 @@ class _RatingStar(Resource):
 
         now = datetime.now()
         for index, menu in enumerate(menus):
-            if menu["menu_name"] in lunch_meal_data:
-                if 1 <= menu["star"] <= 5 and menu["menu_seq"] == index:
+            if menu["menu_name"] in lunch_meal_data and lunch_meal_data[menu["menu_seq"]] == menu["menu_name"]:
+                if 1 <= menu["star"] <= 5:
                     rating_row = MenuRating(
                         school=school,
                         student=student,
