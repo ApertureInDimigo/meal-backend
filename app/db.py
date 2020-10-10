@@ -70,6 +70,10 @@ class MenuRating(db.Model):
     star = db.Column(db.Integer, nullable=True)
     questions = db.Column(db.JSON, nullable=True)
 
+    is_favorite = db.Column(db.Boolean, nullable=True)
+
+
+
     banned = db.Column(db.Boolean, nullable=False)
 
     rating_date = db.Column(db.DateTime, nullable=False)

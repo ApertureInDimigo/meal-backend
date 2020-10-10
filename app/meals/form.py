@@ -30,6 +30,11 @@ class RatingStarSchema(Schema):
     menus = fields.List(fields.Nested(MenuStarSchema), required=True)
 
 
+class MonthDaySchema(Schema):
+    month = fields.String(required=True, data_key="month")
+    year = fields.String(required=True, data_key="year")
+
+
 
 
 class MenuDateSeqSchema(Schema):

@@ -15,6 +15,7 @@ from app.redis import rd
 from app.db import db
 import sqlalchemy
 
+
 def get_region_code(region):
     if region == "경기도":
         return "J10"
@@ -39,17 +40,16 @@ def remove_allergy(str):
     return temp
 
 
-
 def str_to_date(str):
     date = datetime.datetime.strptime(str, "%Y%m%d")
 
     return date
 
+
 def datetime_to_str(dt):
     string = dt.strpttime("%m/%d/%Y, %H:%M:%S")
     print(string)
     return string
-
 
 
 def get_day_meal(school, date):
@@ -72,6 +72,25 @@ def get_day_meal(school, date):
     return lunch_meal_data
 
 
+def get_month_meal(school, year, month):
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month}01&MLSV_TO_YMD={year}{month}30&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    print(url)
+    meal_response = requests.request("GET", url)
+    meal_data = json.loads(meal_response.text)
+    if "mealServiceDietInfo" not in meal_data:
+        return None
+    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+
+    lunch_meal_data = {}
+    for time_meal_data in day_meal_data:
+        if time_meal_data["MMEAL_SC_NM"] == "중식":
+            lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+
+    if len(lunch_meal_data) == 0:
+        return None
+
+    return lunch_meal_data
+
 
 def get_identify(student_id):
     student = Student.query.filter_by(id=student_id).first()
@@ -81,7 +100,8 @@ def get_identify(student_id):
 
 def get_question_rows(menu):
     category_list = get_menu_category_list(menu)
-    question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None,).filter(MealRatingQuestion.category.in_(category_list)).order_by(
+    question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None, ).filter(
+        MealRatingQuestion.category.in_(category_list)).order_by(
         MealRatingQuestion.priority.desc(),
         MealRatingQuestion.add_date.desc()).all()
     print(question_rows)
@@ -108,6 +128,7 @@ def is_local():
 
     return isLocal
 
+
 def send_discord_webhook(webhook_body):
     requests.post(
         DISCORD_WEBHOOK_URL,
@@ -118,40 +139,27 @@ def send_discord_webhook(webhook_body):
 def update_meal_board_views():
     # from run import app
     # with app.app_context:
-        print("start!")
-        post_seq_list = []
-        view_count_list = []
-        for key in rd.scan_iter(match="views:*"):
-            post_seq = int(key.decode("utf-8").split("views:")[1])
-            post_seq_list.append(post_seq)
+    print("start!")
+    post_seq_list = []
+    view_count_list = []
+    for key in rd.scan_iter(match="views:*"):
+        post_seq = int(key.decode("utf-8").split("views:")[1])
+        post_seq_list.append(post_seq)
 
-            student_seq_list = rd.smembers(key)
+        student_seq_list = rd.smembers(key)
 
-            view_count_list.append(len(student_seq_list))
-            for student_seq in student_seq_list:
+        view_count_list.append(len(student_seq_list))
+        for student_seq in student_seq_list:
+            rd.set("pviews:" + str(post_seq) + "-" + str(int(student_seq)), 1, datetime.timedelta(seconds=60 * 60))
 
-                rd.set("pviews:" + str(post_seq) + "-" + str(int(student_seq)), 1, datetime.timedelta(seconds=60 * 60))
+        rd.delete(key)
 
+    print(post_seq_list)
+    print(view_count_list)
 
-            rd.delete(key)
+    post_rows = MealBoard.query.filter(MealBoard.post_seq.in_(post_seq_list)).all()
 
-
-        print(post_seq_list)
-        print(view_count_list)
-
-        post_rows = MealBoard.query.filter(MealBoard.post_seq.in_(post_seq_list)).all()
-
-        for index, post_row in enumerate(post_rows):
-            post_row.views = post_row.views + view_count_list[index]
-            print(post_row.views)
-        db.session.commit()
-
-
-
-
-
-
-
-
-
-
+    for index, post_row in enumerate(post_rows):
+        post_row.views = post_row.views + view_count_list[index]
+        print(post_row.views)
+    db.session.commit()
