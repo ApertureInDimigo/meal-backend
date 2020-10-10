@@ -73,12 +73,12 @@ def get_day_meal(school, date):
 
 
 def get_month_meal(school, year, month):
-    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month}01&MLSV_TO_YMD={year}{month}30&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month.zfill(2)}01&MLSV_TO_YMD={year}{month.zfill(2)}31&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
-        return None
+        return {}
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
 
     lunch_meal_data = {}
@@ -87,7 +87,7 @@ def get_month_meal(school, year, month):
             lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in time_meal_data["DDISH_NM"].split("<br/>")]
 
     if len(lunch_meal_data) == 0:
-        return None
+        return {}
 
     return lunch_meal_data
 
