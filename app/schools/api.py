@@ -6,7 +6,7 @@ from flask_restful import Resource, reqparse
 import bcrypt
 from marshmallow import Schema, fields, pprint, validate
 from app.students.form import *
-
+from app.common.function import *
 from flask import request
 import requests
 import json
@@ -19,23 +19,14 @@ class _Schools(Resource):
     def get(self):
         school_name = request.args.get("schoolName")
         print(school_name)
-        url = f"https://open.neis.go.kr/hub/schoolInfo?&SCHUL_NM={school_name}&Type=json"
-        response = requests.request("GET", url)
 
-        school_data = json.loads(response.text)
-
-        if "schoolInfo" not in school_data:
+        school_data_list = get_school_by_school_name(school_name)
+        if school_data_list is None:
             return {"message": "학교를 찾을 수 없습니다."}, 404
-
-        school_data_list = school_data["schoolInfo"][1]["row"]
         return {
-            "data": [{
-                "schoolId": school_data["SD_SCHUL_CODE"],
-                "schoolName": school_data["SCHUL_NM"],
-                "schoolAddress": school_data["ORG_RDNMA"],
-                "schoolRegion": school_data["LCTN_SC_NM"]
-            } for school_data in school_data_list]
-        }
+            "data" : school_data_list
+        }, 200
+
 
 
 class _SchoolCode(Resource):
@@ -47,14 +38,14 @@ class _SchoolCode(Resource):
         if school_row is None:
             return {"message": "학교를 찾을 수 없습니다."}, 404
         return {
-            "message" : "학교코드가 일치합니다.",
-            "data" : {
-                "schoolId": school_row.school_id,
-                "schoolName": school_row.name,
-                "schoolRegion": school_row.region,
-                "schoolAddress" : school_row.address
-            }
-        }, 200
+                   "message": "학교코드가 일치합니다.",
+                   "data": {
+                       "schoolId": school_row.school_id,
+                       "schoolName": school_row.name,
+                       "schoolRegion": school_row.region,
+                       "schoolAddress": school_row.address
+                   }
+               }, 200
         # if not school_id:
         #     return {"message": "학교ID가 입력되지 않았습니다."}, 400
         # school_code = request.args.get("schoolCode")

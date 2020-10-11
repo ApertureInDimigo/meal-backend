@@ -64,6 +64,7 @@ def create_app(config_filename):
     from app.schools.views import schools_bp
     from app.meals.views import meals_bp
     from app.board.views import board_bp
+    from app.social.views import social_bp
 
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -71,6 +72,7 @@ def create_app(config_filename):
     app.register_blueprint(schools_bp, url_prefix='/api/schools')
     app.register_blueprint(meals_bp, url_prefix='/api/meals')
     app.register_blueprint(board_bp, url_prefix='/api/board')
+    app.register_blueprint(social_bp, url_prefix='/api/social')
 
     # sched.add_job(lambda: update_meal_board_views(), 'cron', second='05', id="update_meal_board_views")
     def update_meal_board_views():

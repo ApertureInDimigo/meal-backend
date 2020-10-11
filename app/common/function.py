@@ -84,7 +84,8 @@ def get_month_meal(school, year, month):
     lunch_meal_data = {}
     for time_meal_data in day_meal_data:
         if time_meal_data["MMEAL_SC_NM"] == "중식":
-            lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+            lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in
+                                                           time_meal_data["DDISH_NM"].split("<br/>")]
 
     if len(lunch_meal_data) == 0:
         return {}
@@ -106,6 +107,24 @@ def get_question_rows(menu):
         MealRatingQuestion.add_date.desc()).all()
     print(question_rows)
     return question_rows
+
+
+def get_school_by_school_name(school_name):
+    url = f"https://open.neis.go.kr/hub/schoolInfo?&SCHUL_NM={school_name}&Type=json&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+    response = requests.request("GET", url)
+
+    school_data = json.loads(response.text)
+
+    if "schoolInfo" not in school_data:
+        return None
+
+    school_data_list = school_data["schoolInfo"][1]["row"]
+    return [{
+        "schoolId": school_data["SD_SCHUL_CODE"],
+        "schoolName": school_data["SCHUL_NM"],
+        "schoolAddress": school_data["ORG_RDNMA"],
+        "schoolRegion": school_data["LCTN_SC_NM"]
+    } for school_data in school_data_list]
 
 
 def dict_mean(dict_list):
@@ -163,3 +182,7 @@ def update_meal_board_views():
         post_row.views = post_row.views + view_count_list[index]
         print(post_row.views)
     db.session.commit()
+
+
+def list_remove_duplicate_dict(d):
+    return [i for n, i in enumerate(d) if i not in d[n + 1:]]
