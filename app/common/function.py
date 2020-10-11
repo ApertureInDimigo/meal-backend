@@ -239,6 +239,7 @@ def fetch_spread_sheet():
     # print(data)
     # # print(munhak_rows)
     # return len(data)
+    return len(data)
 
 
 fetch_spread_sheet()

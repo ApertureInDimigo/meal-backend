@@ -21,6 +21,8 @@ from statistics import mean
 import numpy as np
 from collections import defaultdict
 from sqlalchemy import extract
+
+from config import SECRET_KEY
 from sample.menu_classifier import classify_menu
 
 
@@ -76,13 +78,16 @@ class _RatingAnswerMy(Resource):
             menu_seq=args["menu_seq"], student=student,
             banned=False).filter(MenuRating.questions.isnot(None)).first()
 
+        question_rows_data = cache.get("question_rows_data")
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows.menu_name,
                        "answers":
                            [{"questionSeq": int(question_seq), "answer": answer,
-                             "options": MealRatingQuestion.query.filter_by(question_seq=question_seq).first().options}
+                             "options": [question_row["options"] for question_row in question_rows_data if
+                                         question_row["question_seq"] == int(question_seq)]}
                             for question_seq, answer in rating_rows.questions.items()],
 
                    }
@@ -300,13 +305,16 @@ class _RatingAnswer(Resource):
 
         answer_results = dict_mean([rating_row.questions for rating_row in rating_rows])
         print(answer_results)
+        question_rows_data = cache.get("question_rows_data")
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows[0].menu_name,
                        "answers":
                            [{"questionSeq": int(question_seq), "answerMean": answer_mean,
-                             "options": MealRatingQuestion.query.filter_by(question_seq=question_seq).first().options}
+                             "options": [question_row["options"] for question_row in question_rows_data if
+                                         question_row["question_seq"] == int(question_seq)]}
                             for question_seq, answer_mean in answer_results.items()],
 
                    }
@@ -425,9 +433,8 @@ class _RatingFavorite(Resource):
 
         if len(favorite_dict) == 0:
             return {
-                "message" : "즐겨찾기가 없습니다."
-            }, 404
-
+                       "message": "즐겨찾기가 없습니다."
+                   }, 404
 
         return {
                    "data": favorite_dict
@@ -513,3 +520,13 @@ class _RatingFavorite(Resource):
         return {
                    "message": "정상적으로 처리되었습니다."
                }, 200
+
+
+class _UpdateMealQuestion(Resource):
+
+    def get(self):
+        if request.args.get("key", None) != SECRET_KEY:
+            return "error"
+
+        len_data = fetch_spread_sheet()
+        return f"success! {len_data}"
