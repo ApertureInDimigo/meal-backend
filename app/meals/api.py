@@ -446,7 +446,7 @@ class _RatingFavorite(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.is_favorite.isnot(None)).first()
         if old_rating_row is not None:
             return {"message": "이미 좋아하는 메뉴입니다."}, 409
