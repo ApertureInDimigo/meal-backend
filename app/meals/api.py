@@ -422,6 +422,12 @@ class _RatingFavorite(Resource):
                 if menu in favorite_name_list:
                     favorite_dict[date].append(menu)
 
+        if len(favorite_dict) == 0:
+            return {
+                "message" : "즐겨찾기가 없습니다."
+            }, 404
+
+        
         return {
                    "data": favorite_dict
                }, 200
