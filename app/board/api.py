@@ -17,12 +17,12 @@ import json
 from app.common.function import *
 
 from datetime import datetime
-from sqlalchemy import func
-
+from sqlalchemy import func, desc
 
 from app.scheduler import sched
 from app.redis import rd
 import datetime, time
+
 
 class _MealBoard(Resource):
     @return_500_if_errors
@@ -36,14 +36,16 @@ class _MealBoard(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
+        if args["limit"] * (args["page"] - 1) < 0:
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
         post_rows = db.session.query(MealBoard, func.count(MealBoardLikes.like_seq).label("like_count")).outerjoin(
             MealBoardLikes,
             MealBoard.post_seq == MealBoardLikes.post_seq).filter(
-            MealBoard.banned == False).group_by(MealBoard.post_seq).order_by(MealBoard.post_seq).limit(
+            MealBoard.banned == False).group_by(MealBoard.post_seq).order_by(desc(MealBoard.post_seq)).limit(
             args["limit"]).offset(
-            args["limit"] * args["page"]).all()
+            args["limit"] * (args["page"] - 1)).all()
 
-        print(post_rows[0])
         #
         # post_rows = MealBoard.query.filter_by(banned=False).limit(args["limit"]).offset(
         #     args["limit"] * args["page"]).all()
@@ -55,6 +57,7 @@ class _MealBoard(Resource):
 
         return {
                    "data": [{
+                       "nickname": post_row.MealBoard.student.nickname,
                        "postSeq": post_row.MealBoard.post_seq,
                        "title": post_row.MealBoard.title,
                        "post_date": str(post_row.MealBoard.post_date),
@@ -136,6 +139,10 @@ class _MealBoardMy(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        student_id = g.user_id
+        student, school = get_identify(student_id)
+
         args = request.args
         print(args)
         try:
@@ -145,20 +152,16 @@ class _MealBoardMy(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student_id = g.user_id
-        student, school = get_identify(student_id)
+        if args["limit"] * (args["page"] - 1) < 0:
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
         post_rows = db.session.query(MealBoard, func.count(MealBoardLikes.like_seq).label("like_count")).outerjoin(
             MealBoardLikes,
             MealBoard.post_seq == MealBoardLikes.post_seq).filter(
-            MealBoard.banned == False).filter(student=student).group_by(MealBoard.post_seq).order_by(MealBoard.post_seq).limit(
+            MealBoard.banned == False).filter(MealBoard.student == student).group_by(MealBoard.post_seq).order_by(
+            desc(MealBoard.post_seq)).limit(
             args["limit"]).offset(
-            args["limit"] * args["page"]).all()
-
-        print(post_rows[0])
-        #
-        # post_rows = MealBoard.query.filter_by(banned=False).limit(args["limit"]).offset(
-        #     args["limit"] * args["page"]).all()
+            args["limit"] * (args["page"] - 1)).all()
 
         if len(post_rows) == 0:
             return {
@@ -167,16 +170,15 @@ class _MealBoardMy(Resource):
 
         return {
                    "data": [{
+                       "nickname": post_row.MealBoard.student.nickname,
                        "postSeq": post_row.MealBoard.post_seq,
                        "title": post_row.MealBoard.title,
                        "post_date": str(post_row.MealBoard.post_date),
                        "image_url": post_row.MealBoard.image_url,
                        "like_count": post_row.like_count,
-                       "views": post_row.MealBoard.views
+                       "views": post_row.MealBoard.views,
                    } for post_row in post_rows]
                }, 200
-
-
 
 
 class _MealBoardDetail(Resource):
@@ -202,11 +204,10 @@ class _MealBoardDetail(Resource):
                        "message": "글을 찾을 수 없습니다."
                    }, 404
 
-
         student_seq = student.student_seq
         print("@", rd.scan_iter(match="pviews:*"))
         # for key in rd.scan_iter(match="pviews:*"):
-            # print("@@@",key)
+        # print("@@@",key)
 
         if not rd.exists(f'pviews:{post_seq}-{student_seq}'):
             rd.sadd(f'views:{post_seq}', student_seq)
@@ -214,9 +215,6 @@ class _MealBoardDetail(Resource):
         # print(rd.keys)
         for key in rd.scan_iter(match="views:*"):
             print(rd.smembers(key))
-
-
-
 
         return {
                    "data": {
@@ -227,7 +225,7 @@ class _MealBoardDetail(Resource):
                        "menu_date": str(post_row.MealBoard.menu_date),
                        "post_date": str(post_row.MealBoard.post_date),
                        "image_url": post_row.MealBoard.image_url,
-                       "views" : post_row.MealBoard.views,
+                       "views": post_row.MealBoard.views,
                        "like_count": post_row.like_count,
                    }
                }, 200
@@ -264,8 +262,7 @@ class _MealBoardLike(Resource):
 
         post_row = MealBoard.query.filter_by(post_seq=post_seq).first()
         if post_row is None:
-            return {"message" : "글을 찾을 수 없습니다."}, 404
-
+            return {"message": "글을 찾을 수 없습니다."}, 404
 
         old_like_row = MealBoardLikes.query.filter_by(student=student, post_seq=post_seq).first()
         if old_like_row is not None:
@@ -294,8 +291,7 @@ class _MealBoardLike(Resource):
 
         post_row = MealBoard.query.filter_by(post_seq=post_seq).first()
         if post_row is None:
-            return {"message" : "글을 찾을 수 없습니다."}, 404
-
+            return {"message": "글을 찾을 수 없습니다."}, 404
 
         old_like_row = MealBoardLikes.query.filter_by(student=student, post_seq=post_seq).first()
         if old_like_row is None:
@@ -307,15 +303,6 @@ class _MealBoardLike(Resource):
         return {
                    "message": "정상적으로 처리되었습니다."
                }, 200
-
-
-
-
-
-
-
-
-
 
 
 class _MealBoardLikeMy(Resource):
@@ -337,4 +324,3 @@ class _MealBoardLikeMy(Resource):
             "post_seq": post_seq,
             "like": False if like_row is None else True
         }}, 200
-

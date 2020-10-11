@@ -45,6 +45,84 @@ class _Menu(Resource):
         }
 
 
+class _RatingAnswerMy(Resource):
+
+    @return_500_if_errors
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.args
+        print(args)
+
+        try:
+            args = MenuDateSeqSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
+            .filter(MenuRating.questions.isnot(None)).first()
+        if old_rating_row is None:
+            return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
+        from sqlalchemy.orm import load_only
+        rating_rows = MenuRating.query.options(
+            load_only("menu_name", "questions")
+        ).filter_by(
+            school=school, menu_date=str_to_date(args["menu_date"]),
+            menu_seq=args["menu_seq"], student=student,
+            banned=False).filter(MenuRating.questions.isnot(None)).first()
+
+        return {
+                   "data": {
+                       "menuSeq": args["menu_seq"],
+                       "menuName": rating_rows.menu_name,
+                       "answers":
+                           [{"questionSeq": int(question_seq), "answer": answer,
+                             "options": MealRatingQuestion.query.filter_by(question_seq=question_seq).first().options}
+                            for question_seq, answer in rating_rows.questions.items()],
+
+                   }
+               }, 200
+
+
+class _RatingStarMy(Resource):
+
+    @return_500_if_errors
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.args
+        print(args)
+        try:
+            args = MenuDateSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
+
+        rating_rows = MenuRating.query.filter_by(student=student, school=school, banned=False,
+                                                 menu_date=str_to_date(args["menu_date"])).filter(
+            MenuRating.star.isnot(None)).all()
+        if rating_rows is None:
+            return {"message": "평가한 메뉴가 없습니다."}, 404
+
+        rating_result = []
+        for rating_row in rating_rows:
+            rating_result.append({
+                "menuSeq": rating_row.menu_seq,
+                "menuName": rating_row.menu_name,
+                "star": rating_row.star
+            })
+
+        return {
+            "data": rating_result
+        }
+
+
 class _RatingStar(Resource):
     @return_500_if_errors
     @login_required
@@ -121,7 +199,7 @@ class _RatingStar(Resource):
 
         now = datetime.now()
         for index, menu in enumerate(menus):
-            if menu["menu_name"] in lunch_meal_data and lunch_meal_data[menu["menu_seq"]] == menu["menu_name"]:
+            if 0 <= menu["menu_seq"] <= len(lunch_meal_data) - 1:
                 if 1 <= menu["star"] <= 5:
                     rating_row = MenuRating(
                         school=school,
@@ -210,7 +288,7 @@ class _RatingAnswer(Resource):
                                                     menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.questions.isnot(None)).first()
         if old_rating_row is None:
-            return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+            return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
         from sqlalchemy.orm import load_only
         rating_rows = MenuRating.query.options(
             load_only("menu_name", "questions")
@@ -343,11 +421,10 @@ class _RatingFavorite(Resource):
             for menu in menus:
                 if menu in favorite_name_list:
                     favorite_dict[date].append(menu)
-        
 
         return {
-            "data": favorite_dict
-        }, 200
+                   "data": favorite_dict
+               }, 200
 
     @return_500_if_errors
     @login_required
