@@ -28,6 +28,7 @@ class _Menu(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
         student_id = g.user_id
         args = request.args
         print(args)
@@ -427,7 +428,7 @@ class _RatingFavorite(Resource):
                 "message" : "즐겨찾기가 없습니다."
             }, 404
 
-        
+
         return {
                    "data": favorite_dict
                }, 200
@@ -486,7 +487,7 @@ class _RatingFavorite(Resource):
     def delete(self):
 
         student_id = g.user_id
-        args = request.get_json()
+        args = request.args
         try:
 
             args = MenuDateSeqSchema().load(args)
