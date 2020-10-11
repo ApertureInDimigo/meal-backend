@@ -2,10 +2,13 @@
 import configparser
 import socket
 import os
+from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 hostname = socket.gethostname()
 isLocal = True
-
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
 #Chuns-MacBook-Air.local
 
 if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
@@ -39,6 +42,7 @@ if isLocal:
 
     REDIS_URL = config['DEFAULT']['REDIS_URL']
 
+    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config['DEFAULT']['GOOGLE_CREDENTIALS_PATH'], scope)
 
 
 else:
@@ -54,6 +58,10 @@ else:
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = os.environ.get('SECRET_KEY', None)
+
+    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_dict(
+        json.loads(os.environ.get('GOOGLE_CREDENTIALS', None)), scope)
+
 
     DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', None)
 

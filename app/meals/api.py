@@ -257,9 +257,9 @@ class _RatingQuestion(Resource):
                 "category": category,
                 "questions": [
                     {
-                        "questionSeq": question_row.question_seq,
-                        "content": question_row.content,
-                        "options": question_row.options
+                        "questionSeq": question_row["question_seq"],
+                        "content": question_row["content"],
+                        "options": question_row["options"]
                     }
 
                     for question_row in question_rows]})
@@ -357,12 +357,12 @@ class _RatingAnswer(Resource):
             try:
                 target_question_row = \
                     [question_row for question_row in question_rows if
-                     question_row.question_seq == question["question_seq"]][0]
+                     question_row["question_seq"] == question["question_seq"]][0]
 
             except Exception as e:
                 return {"message": "잘못된 질문입니다."}, 404
 
-            if not (1 <= question["answer"] <= len(target_question_row.options)):
+            if not (1 <= question["answer"] <= len(target_question_row["options"])):
                 return {"message": "질문에 대한 잘못된 응답입니다."}, 404
 
         rating_row = MenuRating(
@@ -502,7 +502,7 @@ class _RatingFavorite(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.is_favorite.isnot(None)).first()
         if old_rating_row is None:
             return {"message": "좋아하지 않는 메뉴입니다."}, 409
