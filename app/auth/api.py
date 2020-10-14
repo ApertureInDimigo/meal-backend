@@ -53,6 +53,8 @@ class Auth(Resource):
             payload = {
                 "data":
                     {
+                        "userSeq": row.student_seq,
+                        "type": "normal",
                         "id": row.id,
                         "nickname": row.nickname,
                         "school": {
@@ -109,6 +111,8 @@ class KakaoLogin(Resource):
                 payload = {
                     "data":
                         {
+                            "userSeq" : row.student_seq,
+                            "type" : "kakao",
                             "kakaoId": row.kakao_id,
                             "nickname": row.nickname,
                             "school": {

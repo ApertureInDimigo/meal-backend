@@ -4,7 +4,7 @@ import datetime
 import requests
 import json
 
-from flask import copy_current_request_context
+from flask import copy_current_request_context, g
 
 from app.db import Student, MealRatingQuestion, MealBoard
 from sample.menu_classifier import classify_menu, get_menu_category_list
@@ -101,7 +101,7 @@ def get_month_meal(school, year, month):
 
 
 def get_identify(student_id):
-    student = Student.query.filter_by(id=student_id).first()
+    student = Student.query.filter_by(student_seq=g.user_seq).first()
     school = student.school
     return student, school
 
