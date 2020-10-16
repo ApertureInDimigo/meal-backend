@@ -26,6 +26,8 @@ import copy
 def get_region_code(region):
     if region == "경기도":
         return "J10"
+    elif region == "광주광역시":
+        return "F10"
 
 
 def remove_allergy(str):
@@ -61,7 +63,7 @@ def datetime_to_str(dt):
 
 def get_day_meal(school, date):
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
-
+    print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
