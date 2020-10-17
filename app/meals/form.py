@@ -31,8 +31,11 @@ class RatingStarSchema(Schema):
 
 
 class MonthDaySchema(Schema):
-    month = fields.String(required=True, data_key="month")
-    year = fields.String(required=True, data_key="year")
+    month = fields.String(required=False, data_key="month")
+    year = fields.String(required=False, data_key="year")
+
+    start_date = fields.String(required=False, data_key="startDate")
+    end_date = fields.String(required=False, data_key="endDate")
 
 
 

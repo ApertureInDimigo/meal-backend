@@ -419,8 +419,10 @@ class _RatingFavorite(Resource):
         favorite_name_list = [rating_row.menu_name for rating_row in rating_rows]
         # return
 
-        lunch_meal_list_data = get_month_meal(school, args["year"], args["month"])
-
+        if "year" in args and "month" in args:
+            lunch_meal_list_data = get_month_meal(school, args["year"], args["month"])
+        elif args["start_date"] is not None and args["end_date"] is not None:
+            lunch_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"])
         print(lunch_meal_list_data)
         print(favorite_name_list)
 

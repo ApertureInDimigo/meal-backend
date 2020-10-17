@@ -102,6 +102,29 @@ def get_month_meal(school, year, month):
     return lunch_meal_data
 
 
+
+def get_range_meal(school, start_date, end_date):
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    print(url)
+    meal_response = requests.request("GET", url)
+    meal_data = json.loads(meal_response.text)
+    if "mealServiceDietInfo" not in meal_data:
+        return {}
+    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+
+    lunch_meal_data = {}
+    for time_meal_data in day_meal_data:
+        if time_meal_data["MMEAL_SC_NM"] == "중식":
+            lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in
+                                                           time_meal_data["DDISH_NM"].split("<br/>")]
+
+    if len(lunch_meal_data) == 0:
+        return {}
+
+    return lunch_meal_data
+
+
+
 def get_identify(student_id):
     student = Student.query.filter_by(student_seq=g.user_seq).first()
     school = student.school
