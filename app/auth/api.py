@@ -62,7 +62,6 @@ class Auth(Resource):
                             "schoolId": school.school_id,
                             "schoolGrade": row.school_grade,
                             "schoolClass": row.school_class,
-                            "schoolRegion" : row.region
                         }
                     },
                 "exp": datetime.now() + timedelta(seconds=9999999)
@@ -121,7 +120,7 @@ class KakaoLogin(Resource):
                                 "schoolId": school.school_id,
                                 "schoolGrade": row.school_grade,
                                 "schoolClass": row.school_class,
-                                "schoolRegion": row.region
+
                             }
                         },
                     "exp": datetime.utcnow() + timedelta(seconds=60 * 60 * 3)
