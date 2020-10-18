@@ -186,8 +186,10 @@ class _RatingStar(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
         print(args)
-        student = Student.query.filter_by(id=student_id).first()
-        school = student.school
+        student, school = get_identify(student_id)
+
+
+        
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         # if args["menuName"] not in lunch_meal_data:
