@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import marshmallow
 
 from app.common.decorator import return_500_if_errors
@@ -5,6 +7,8 @@ from app.db import *
 from flask_restful import Resource, reqparse
 import bcrypt
 from marshmallow import Schema, fields, pprint, validate
+
+from app.schools.form import SchoolIdSchema
 from app.students.form import *
 from app.common.function import *
 from flask import request
@@ -24,9 +28,54 @@ class _Schools(Resource):
         if school_data_list is None:
             return {"message": "학교를 찾을 수 없습니다."}, 404
         return {
-            "data" : school_data_list
-        }, 200
+                   "data": school_data_list
+               }, 200
 
+
+class _SchoolClass(Resource):
+
+    @return_500_if_errors
+    def get(self):
+        args = request.args
+        try:
+            args = SchoolIdSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        # print(get_region_code(args['school_region']))
+
+        url = f"https://open.neis.go.kr/hub/schoolInfo?&SD_SCHUL_CODE={args['school_id']}&Type=json&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+        response = requests.request("GET", url)
+
+        school_data = json.loads(response.text)
+
+        if "schoolInfo" not in school_data:
+            return {"message": "학교를 찾을 수 없습니다."}, 404
+
+        region_code = school_data["schoolInfo"][1]["row"][0]["ATPT_OFCDC_SC_CODE"]
+
+
+
+        url = f"https://open.neis.go.kr/hub/classInfo?Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE={region_code}&SD_SCHUL_CODE={args['school_id']}&AY=2020&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+        response = requests.request("GET", url)
+
+        try:
+            data = json.loads(response.text)["classInfo"][1]["row"]
+        except:
+            return {"message": "반 정보를 찾을 수 없습니다."}, 404
+        print(data)
+
+        class_result = defaultdict(list)
+
+        for school_class in data:
+            class_result[school_class["GRADE"]].append(school_class["CLASS_NM"])
+
+
+
+
+        return {
+            "data" : class_result
+        }, 200
 
 
 class _SchoolCode(Resource):

@@ -61,7 +61,8 @@ class Auth(Resource):
                             "schoolName": school.name,
                             "schoolId": school.school_id,
                             "schoolGrade": row.school_grade,
-                            "schoolClass": row.school_class
+                            "schoolClass": row.school_class,
+                            "schoolRegion" : row.region
                         }
                     },
                 "exp": datetime.now() + timedelta(seconds=9999999)
@@ -119,7 +120,8 @@ class KakaoLogin(Resource):
                                 "schoolName": school.name,
                                 "schoolId": school.school_id,
                                 "schoolGrade": row.school_grade,
-                                "schoolClass": row.school_class
+                                "schoolClass": row.school_class,
+                                "schoolRegion": row.region
                             }
                         },
                     "exp": datetime.utcnow() + timedelta(seconds=60 * 60 * 3)
@@ -202,7 +204,10 @@ class KakaoRegister(Resource):
             if user_info["kakao_account"]["gender_needs_agreement"] is True:
                 gender = None,
             else:
-                gender = user_info["kakao_account"]["gender"]
+                try:
+                    gender = user_info["kakao_account"]["gender"]
+                except:
+                    gender = None
 
 
             student_row = Student(

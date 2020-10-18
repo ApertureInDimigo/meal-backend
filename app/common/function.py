@@ -24,11 +24,12 @@ import copy
 
 
 def get_region_code(region):
-    if region == "경기도":
-        return "J10"
-    elif region == "광주광역시":
-        return "F10"
+    region_code_list = ["B10", "C10", "D10", "E10", "F10", "G10", "H10", "I10", "J10", "K10", "M10", "N10", "P10",
+                        "Q10", "R10", "S10", "T10"]
+    region_list = ["서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도", "충청북도",
+                   "충청남도", "전라북도", "전라남도", "경상북도","경상남도", "제주특별자치도"]
 
+    return dict(zip(region_list, region_code_list))[region]
 
 def remove_allergy(str):
     temp = re.sub("\([^)]*\)|[0-9]*\.", '', str)  # 알레르기 제거
@@ -102,7 +103,6 @@ def get_month_meal(school, year, month):
     return lunch_meal_data
 
 
-
 def get_range_meal(school, start_date, end_date):
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
     print(url)
@@ -124,7 +124,6 @@ def get_range_meal(school, start_date, end_date):
     return lunch_meal_data
 
 
-
 def get_identify(student_id):
     student = Student.query.filter_by(student_seq=g.user_seq).first()
     school = student.school
@@ -137,7 +136,7 @@ def get_question_rows(menu):
     question_rows = [question_row for question_row in cache.get("question_rows_data") if
                      question_row["category"] in category_list]
 
-    question_rows.sort(key=lambda x : x["priority"])
+    question_rows.sort(key=lambda x: x["priority"])
 
     # question_rows = MealRatingQuestion.query.filter_by(is_available=True, school=None, ).filter(
     #     MealRatingQuestion.category.in_(category_list)).order_by(

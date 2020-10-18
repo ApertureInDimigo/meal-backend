@@ -14,6 +14,10 @@ class StudentSchema(Schema):
 
 
 
+class SchoolIdSchema(Schema):
+    school_id = fields.Integer(required=True, data_key="schoolId",)
+
+
 
 
 
