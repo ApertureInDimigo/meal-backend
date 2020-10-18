@@ -71,6 +71,9 @@ class _SchoolClass(Resource):
             class_result[school_class["GRADE"]].append(school_class["CLASS_NM"])
 
 
+        for k,v in class_result:
+            class_result[k] = sorted(class_result[k])
+
 
 
         return {
