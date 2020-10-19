@@ -189,7 +189,7 @@ class _RatingStar(Resource):
         student, school = get_identify(student_id)
 
 
-        
+
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         # if args["menuName"] not in lunch_meal_data:
@@ -213,7 +213,7 @@ class _RatingStar(Resource):
                         school=school,
                         student=student,
                         menu_seq=menu["menu_seq"],
-                        menu_name=lunch_meal_data[index],
+                        menu_name=lunch_meal_data[menu["menu_seq"]],
                         menu_date=str_to_date(args["menu_date"]),
                         star=menu["star"],
                         banned=False,

@@ -64,7 +64,7 @@ class Auth(Resource):
                             "schoolClass": row.school_class,
                         }
                     },
-                "exp": datetime.now() + timedelta(seconds=9999999)
+                "exp": datetime.now() + timedelta(minutes=99999999)
             }
 
             token = jwt.encode(payload, SECRET_KEY, "HS256").decode("UTF-8")
@@ -123,7 +123,7 @@ class KakaoLogin(Resource):
 
                             }
                         },
-                    "exp": datetime.utcnow() + timedelta(seconds=60 * 60 * 3)
+                    "exp": datetime.utcnow() + timedelta(minutes=99999999)
                 }
 
                 token = jwt.encode(payload, SECRET_KEY, "HS256").decode("UTF-8")
