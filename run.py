@@ -20,6 +20,12 @@ def catch_all(path):
 
     return render_template('index.html')
 
+@app.route('/privacy')
+def privacy():
+
+    return render_template('privacy.html')
+
+
 # 404 not found > react_router
 @app.errorhandler(404)
 def not_found(error):
