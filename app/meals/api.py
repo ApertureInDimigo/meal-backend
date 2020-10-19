@@ -514,11 +514,12 @@ class _RatingFavorite(Resource):
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                     menu_name=lunch_meal_data[args["menu_seq"]]) \
-            .filter(MenuRating.is_favorite.isnot(None)).first()
+            .filter(MenuRating.is_favorite.isnot(None)).all()
         if old_rating_row is None:
             return {"message": "좋아하지 않는 메뉴입니다."}, 409
 
-        db.session.delete(old_rating_row)
+        for rating_row in old_rating_row:
+            db.session.delete(rating_row)
         db.session.commit()
 
         return {
