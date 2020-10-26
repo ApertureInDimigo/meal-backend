@@ -289,6 +289,10 @@ class IdHint(Resource):
 
         student_id = student_row.id
         print(student_id)
+
+        if student_id is None:
+            return {"message": "소셜 로그인 회원입니다"}, 401
+
         part1, part2= student_id.split("@")
         part2, part3 = part2.split(".")
 
