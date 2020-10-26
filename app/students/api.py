@@ -165,7 +165,7 @@ class PasswordResetCheckMail(Resource):
         print(random_code)
 
         html = render_template('./mail/password_reset.html',
-                                                                       data={"verify_code": random_code})
+                                                                       data={"verify_code": int(random_code)})
         threading.Thread(target=lambda: send_mail(receiver=data["id"], title="[YAMMEAL] 비밀번호 찾기 인증 번호",
                                                   html=html)
                          ).start()
@@ -228,8 +228,11 @@ class PasswordResetCheckCode(Resource):
                 return {"accessToken": token}, 200
             else:
                 if rd.exists(f"password_code:{data['id']}:wrong") == 1:
-
-                    rd.set(f"password_code:{data['id']}:wrong", int(wrong_count) + 1, datetime.timedelta(minutes=10))
+                    try:
+                        rd.set(f"password_code:{data['id']}:wrong", int(wrong_count) + 1,
+                               datetime.timedelta(minutes=10))
+                    except:
+                        rd.set(f"password_code:{data['id']}:wrong", 1, datetime.timedelta(minutes=10))
 
                 else:
                     rd.set(f"password_code:{data['id']}:wrong", 1, datetime.timedelta(minutes=10))
@@ -272,7 +275,7 @@ class IdHint(Resource):
     @return_500_if_errors
     def get(self):
 
-        args = request.get_json()
+        args = request.args
         print(args)
 
         try:
