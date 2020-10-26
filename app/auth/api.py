@@ -14,6 +14,7 @@ from datetime import timedelta
 import json
 import requests
 
+
 # server.py
 
 class Auth(Resource):
@@ -100,19 +101,18 @@ class KakaoLogin(Resource):
         print(user_info)
         # return
 
-
         if user_info is not None:
             target_student = Student.query.filter_by(kakao_id=str(user_info["id"])).first()
             if target_student is None:
-                return {"message" : "회원가입 해주세요."}, 404
+                return {"message": "회원가입 해주세요."}, 404
             else:
                 row = target_student
                 school = row.school
                 payload = {
                     "data":
                         {
-                            "userSeq" : row.student_seq,
-                            "type" : "kakao",
+                            "userSeq": row.student_seq,
+                            "type": "kakao",
                             "kakaoId": row.kakao_id,
                             "nickname": row.nickname,
                             "school": {
@@ -142,8 +142,6 @@ class KakaoRegister(Resource):
 
         # del args["accessToken"]
 
-
-
         user_info = verify_kakao_token(access_token)
 
         print(user_info)
@@ -163,7 +161,8 @@ class KakaoRegister(Resource):
             if not (1 <= data["school_grade"] <= 6) or not (1 <= data["school_class"] <= 30):
                 return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-            same_identity_count = Student.query.filter((Student.kakao_id == str(user_info["id"])) | (Student.nickname == data["nickname"])).count()
+            same_identity_count = Student.query.filter(
+                (Student.kakao_id == str(user_info["id"])) | (Student.nickname == data["nickname"])).count()
             if same_identity_count > 0:
                 return {"message": "이미 존재하는 별명이거나 카카오 ID입니다."}, 409
 
@@ -196,8 +195,13 @@ class KakaoRegister(Resource):
 
             if school_row.verify_code is not None:
                 if "school_code" not in data or data["school_code"] != school_row.verify_code:
-                    return {"message": "학교 인증 코드가 일치하지 않습니다."}, 403
+                    school_verified = False
+                else:
+                    school_verified = True
 
+                    # return {"message": "학교 인증 코드가 일치하지 않습니다."}, 403
+            else:
+                school_verified = False
 
             # print(salt)
             if user_info["kakao_account"]["gender_needs_agreement"] is True:
@@ -208,15 +212,15 @@ class KakaoRegister(Resource):
                 except:
                     gender = None
 
-
             student_row = Student(
-                kakao_id= user_info["id"],
-                gender= gender,
+                kakao_id=user_info["id"],
+                gender=gender,
                 nickname=data["nickname"],
                 school_grade=data["school_grade"],
                 school_class=data["school_class"],
                 register_date=datetime.now(),
                 point=0,
+                school_verified=school_verified,
                 school_seq=school_row.school_seq
             )
             db.session.add(student_row)
