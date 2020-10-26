@@ -26,6 +26,12 @@ def privacy():
     return render_template('privacy.html')
 
 
+@app.route('/password-reset')
+def password_reset_template():
+
+    return render_template('./mail/password_reset.html', data={"verify_code" : "123456"})
+
+
 # 404 not found > react_router
 @app.errorhandler(404)
 def not_found(error):

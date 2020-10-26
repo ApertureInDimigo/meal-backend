@@ -9,7 +9,7 @@ hostname = socket.gethostname()
 isLocal = True
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
-#Chuns-MacBook-Air.local
+# Chuns-MacBook-Air.local
 
 if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
     isLocal = True
@@ -31,7 +31,6 @@ if isLocal:
                                                                                             DB_ADDR=pg_db_hostname,
                                                                                             DB_NAME=pg_db_name)
 
-
     DEBUG = False
     PORT = 5000
     HOST = "0.0.0.0"
@@ -42,8 +41,13 @@ if isLocal:
 
     REDIS_URL = config['DEFAULT']['REDIS_URL']
 
-    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config['DEFAULT']['GOOGLE_CREDENTIALS_PATH'], scope)
+    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config['DEFAULT']['GOOGLE_CREDENTIALS_PATH'],
+                                                                          scope)
 
+    MAIL_ID = config["DEFAULT"]["MAIL_ID"]
+    MAIL_PASSWORD = config["DEFAULT"]["MAIL_PASSWORD"]
+
+    TEMPLATES_AUTO_RELOAD = True
 
 else:
     pg_db_username = 'yeah'
@@ -62,15 +66,12 @@ else:
     GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_dict(
         json.loads(os.environ.get('GOOGLE_CREDENTIALS', None)), scope)
 
-
     DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', None)
 
     REDIS_URL = os.environ.get('REDIS_URL', None)
 
-
-
-
-
+    MAIL_ID = os.environ.get("MAIL_ID", None)
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", None)
 
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 ADMIN_ID = os.environ.get('ADMIN_ID', None)

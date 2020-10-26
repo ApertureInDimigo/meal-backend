@@ -1,10 +1,11 @@
 import re
 import datetime
+from email.mime.multipart import MIMEMultipart
 
 import requests
 import json
 
-from flask import copy_current_request_context, g
+from flask import copy_current_request_context, g, render_template
 
 from app.db import Student, MealRatingQuestion, MealBoard
 from sample.menu_classifier import classify_menu, get_menu_category_list
@@ -124,7 +125,7 @@ def get_range_meal(school, start_date, end_date):
     return lunch_meal_data
 
 
-def get_identify(student_id):
+def get_identify(student_id = None):
     student = Student.query.filter_by(student_seq=g.user_seq).first()
     school = student.school
     return student, school
@@ -267,3 +268,39 @@ def fetch_spread_sheet():
 
 
 fetch_spread_sheet()
+
+
+
+def send_mail(receiver, title, html):
+    import smtplib
+    from email.mime.text import MIMEText
+    from config import MAIL_ID, MAIL_PASSWORD
+
+
+    # 세션 생성
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+
+    # TLS 보안 시작
+    s.starttls()
+
+    # 로그인 인증
+    s.login(MAIL_ID, MAIL_PASSWORD)
+
+    # 보낼 메시지 설정
+    msg = MIMEMultipart("alternative")
+
+    part2 = MIMEText(html, "html")
+
+    # Add HTML/plain-text parts to MIMEMultipart message
+    # The email client will try to render the last part first
+
+    msg.attach(part2)
+    msg['Subject'] = title
+    msg["From"] = "YAMMEAL"
+    msg["To"] = receiver  # 수신 메일
+    # 메일 보내기
+    s.sendmail('YAMMEAL', 'jjy37777@naver.com', msg.as_string())
+
+    # 세션 종료
+    s.quit()
+
