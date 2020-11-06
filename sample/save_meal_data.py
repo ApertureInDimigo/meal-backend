@@ -3,13 +3,11 @@ import pickle
 import json
 import re
 
-from config import NEIS_KEY
-
 final = []
 
 
 
-school_url = f"https://open.neis.go.kr/hub/schoolInfo?ATPT_OFCDC_SC_CODE=J10&Type=json&SCHUL_KND_SC_NM=고등학교&KEY={NEIS_KEY}&pSize=999"
+school_url = "https://open.neis.go.kr/hub/schoolInfo?ATPT_OFCDC_SC_CODE=J10&Type=json&SCHUL_KND_SC_NM=고등학교&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=999"
 response = requests.request("GET", school_url)
 
 data = json.loads(response.text.encode('utf8'))
@@ -27,7 +25,7 @@ for schoolId in school_id_list:
 
 
 
-    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE={schoolId}&MLSV_FROM_YMD=20200101&MLSV_TO_YMD=20210101&KEY={NEIS_KEY}&pSize=365&Type=json"
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE={schoolId}&MLSV_FROM_YMD=20200101&MLSV_TO_YMD=20210101&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
     payload = {}
     headers = {
         'Cookie': 'WMONID=mzfMsQnxiV_'

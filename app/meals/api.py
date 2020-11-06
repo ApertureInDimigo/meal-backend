@@ -42,7 +42,7 @@ class _Menu(Resource):
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
         student, school = get_identify(student_id)
-        lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"])
         return {
             "data": lunch_meal_data
         }
