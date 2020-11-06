@@ -47,6 +47,8 @@ if isLocal:
     MAIL_ID = config["DEFAULT"]["MAIL_ID"]
     MAIL_PASSWORD = config["DEFAULT"]["MAIL_PASSWORD"]
 
+    NEIS_KEY = config["DEFAULT"]["NEIS_KEY"]
+
     TEMPLATES_AUTO_RELOAD = True
 
 else:
@@ -69,6 +71,8 @@ else:
     DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', None)
 
     REDIS_URL = os.environ.get('REDIS_URL', None)
+
+    NEIS_KEY = os.environ.get("NEIS_KEY", None)
 
     MAIL_ID = os.environ.get("MAIL_ID", None)
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", None)
