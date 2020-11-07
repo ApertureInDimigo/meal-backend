@@ -8,7 +8,7 @@ import clipboard
 from sample import menu_classifier
 
 target_word_list = set()
-target_word = "찹"
+target_word = "과고"
 def add_target_word_list(data):
     if type(target_word_list) == set:
         target_word_list.add(data)
@@ -57,9 +57,16 @@ if type(target_word_list) == set:
     target_word_list = list(target_word_list)
     target_word_list.sort()
 
+RegEx = "^[가-힣0-9a-zA-Z]+[^망][^고|남고|여고|공고|고등]$"
+
 for menu in target_word_list:
-    print(menu,end=" ")
-    print(menu_classifier.classify_menu(menu))
+    '''
+    if re.compile(RegEx).match(menu):
+        print(menu)'''
+
+    print(menu)
+
+    #print(menu_classifier.classify_menu(menu))
     # print(menu.split("뿌링클"))
 print(len(target_word_list))
 clipboard.copy("\n".join(target_word_list))

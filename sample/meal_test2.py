@@ -35,7 +35,6 @@ def test(menu):
         add_target_word_list(menu)
 
 
-
 with open('전국 고등학교 급식 데이터(원본).pickle', 'rb') as fr:
     schools = pickle.load(fr)
 

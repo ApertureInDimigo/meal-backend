@@ -40,6 +40,8 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
 
 
         def remove_allergy(str):
+
+
             temp = re.sub("\([^)]*\)|[0-9]*\.", '', str) #알레르기 제거
             temp = re.sub("[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"A-Za-z]+$", "", temp) #연속되는 의미없는 특수문자 제거
             temp = re.sub("[^가-힣a-zA-Z0-9&+/]", "", temp) #    &+/  외 특수문자 제거
@@ -57,6 +59,9 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
 
             temp = re.sub("\d*$","",temp)
             temp = re.sub("/$","",temp)
+            temp = re.sub("[^망]]고$","",temp)
+            temp = re.sub("[남고|여고|공고]$", "", temp)
+            temp = re.sub("과고[^구마]","",temp)#과고구마
 
             return temp
 
