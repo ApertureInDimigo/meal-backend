@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from config import NEIS_KEY
 import marshmallow
 
 from app.common.decorator import return_500_if_errors
@@ -44,7 +44,7 @@ class _SchoolClass(Resource):
 
         # print(get_region_code(args['school_region']))
 
-        url = f"https://open.neis.go.kr/hub/schoolInfo?&SD_SCHUL_CODE={args['school_id']}&Type=json&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+        url = f"https://open.neis.go.kr/hub/schoolInfo?&SD_SCHUL_CODE={args['school_id']}&Type=json&KEY={NEIS_KEY}"
         response = requests.request("GET", url)
 
         school_data = json.loads(response.text)
@@ -56,7 +56,7 @@ class _SchoolClass(Resource):
 
 
 
-        url = f"https://open.neis.go.kr/hub/classInfo?Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE={region_code}&SD_SCHUL_CODE={args['school_id']}&AY=2020&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+        url = f"https://open.neis.go.kr/hub/classInfo?Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE={region_code}&SD_SCHUL_CODE={args['school_id']}&AY=2020&KEY={NEIS_KEY}"
         response = requests.request("GET", url)
 
         try:

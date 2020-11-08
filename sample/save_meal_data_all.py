@@ -2,14 +2,14 @@ import requests
 import pickle
 import json
 import re
-
+from config import NEIS_KEY
 final = []
 
 for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10","M10","N10","P10","Q10","R10","S10","T10"]:
 
     print(region_code)
 
-    school_url = f"https://open.neis.go.kr/hub/schoolInfo?ATPT_OFCDC_SC_CODE={region_code}&Type=json&SCHUL_KND_SC_NM=고등학교&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=999"
+    school_url = f"https://open.neis.go.kr/hub/schoolInfo?ATPT_OFCDC_SC_CODE={region_code}&Type=json&SCHUL_KND_SC_NM=고등학교&KEY={NEIS_KEY}&pSize=999"
     response = requests.request("GET", school_url)
 
     data = json.loads(response.text.encode('utf8'))
@@ -25,7 +25,7 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
 
 
 
-        url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={region_code}&SD_SCHUL_CODE={schoolId}&MLSV_FROM_YMD=20190101&MLSV_TO_YMD=20191231&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+        url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={region_code}&SD_SCHUL_CODE={schoolId}&MLSV_FROM_YMD=20190101&MLSV_TO_YMD=20191231&KEY={NEIS_KEY}&pSize=365&Type=json"
         payload = {}
         headers = {
             'Cookie': 'WMONID=mzfMsQnxiV_'
