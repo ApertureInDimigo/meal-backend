@@ -42,10 +42,36 @@ class _Menu(Resource):
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
         student, school = get_identify(student_id)
+        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        return {
+            "data": lunch_meal_data
+        }
+
+
+class _Menu_v2(Resource):
+    @return_500_if_errors
+    @login_required
+    def get(self):
+
+        student_id = g.user_id
+        args = request.args
+        print(args)
+
+        try:
+            args = MenuDateSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify(student_id)
         lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"])
         return {
             "data": lunch_meal_data
         }
+
+
+
+
 
 
 class _RatingAnswerMy(Resource):
@@ -252,6 +278,9 @@ class _RatingQuestion(Resource):
 
         student, school = get_identify(student_id)
         lunch_meal_data = get_day_meal(school, args["menu_date"])
+
+        if lunch_meal_data is None:
+            return {"message" : "급식이 존재하지 않습니다."}, 404
 
         question_dict = []
 

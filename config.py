@@ -6,25 +6,28 @@ from oauth2client.service_account import ServiceAccountCredentials
 import json
 
 hostname = socket.gethostname()
-isLocal = True
+host = None
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
 # Chuns-MacBook-Air.local
 
 if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
-    isLocal = True
+    host = "LOCAL"
+elif hostname[:5] == "vultr":
+    host = "VULTR"
 else:
-    isLocal = False
+    host = "HEROKU"
 
-if isLocal:
-    print("local")
+
+if host == "LOCAL" or host == "VULTR":
+    print(host)
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    pg_db_username = config['DEFAULT']['LOCAL_DB_USERNAME']
-    pg_db_password = config['DEFAULT']['LOCAL_DB_PASSWORD']
-    pg_db_name = config['DEFAULT']['LOCAL_DB_NAME']
-    pg_db_hostname = config['DEFAULT']['LOCAL_DB_HOSTNAME']
+    pg_db_username = config[host]['LOCAL_DB_USERNAME']
+    pg_db_password = config[host]['LOCAL_DB_PASSWORD']
+    pg_db_name = config[host]['LOCAL_DB_NAME']
+    pg_db_hostname = config[host]['LOCAL_DB_HOSTNAME']
 
     SQLALCHEMY_DATABASE_URI = "postgresql://{DB_USER}:{DB_PASS}@{DB_ADDR}/{DB_NAME}".format(DB_USER=pg_db_username,
                                                                                             DB_PASS=pg_db_password,
@@ -36,20 +39,23 @@ if isLocal:
     HOST = "0.0.0.0"
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = config['DEFAULT']['SECRET_KEY']
-    DISCORD_WEBHOOK_URL = config['DEFAULT']['DISCORD_WEBHOOK_URL']
+    SECRET_KEY = config[host]['SECRET_KEY']
+    DISCORD_WEBHOOK_URL = config[host]['DISCORD_WEBHOOK_URL']
 
-    REDIS_URL = config['DEFAULT']['REDIS_URL']
+    REDIS_URL = config[host]['REDIS_URL']
 
-    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config['DEFAULT']['GOOGLE_CREDENTIALS_PATH'],
+    GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config[host]['GOOGLE_CREDENTIALS_PATH'],
                                                                           scope)
 
-    MAIL_ID = config["DEFAULT"]["MAIL_ID"]
-    MAIL_PASSWORD = config["DEFAULT"]["MAIL_PASSWORD"]
+    MAIL_ID = config[host]["MAIL_ID"]
+    MAIL_PASSWORD = config[host]["MAIL_PASSWORD"]
 
-    NEIS_KEY = config["DEFAULT"]["NEIS_KEY"]
+    NEIS_KEY = config[host]["NEIS_KEY"]
 
-    TEMPLATES_AUTO_RELOAD = True
+    if host == "LOCAL":
+        TEMPLATES_AUTO_RELOAD = True
+    else:
+        pass
 
 else:
     pg_db_username = 'yeah'
