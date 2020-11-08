@@ -29,9 +29,12 @@ def create_app(config_filename):
     # from app.redis import redis_client
     import app.redis
 
-
-    if is_local() is True:
+    host_type = get_host_type()
+    if host_type == "LOCAL":
         cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        firebase = firebase_admin.initialize_app(cred)
+    elif host_type == "VULTR":
+        cred = credentials.Certificate("./meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
     else:
         cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
@@ -92,32 +95,32 @@ def create_app(config_filename):
                 post_row.views += view_count_list[index]
             db.session.commit()
 
-    if not is_local():
-
-        # set optional bootswatch theme
-        app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
-
-        admin = Admin(app, name='microblog', template_mode='bootstrap3')
-        # Add administrative views here
-
-
-
-        class ModelView(flask_admin.contrib.sqla.ModelView):
-            def is_accessible(self):
-                auth = request.authorization or request.environ.get('REMOTE_USER')  # workaround for Apache
-                if not auth or (auth.username, auth.password) != (app.config['ADMIN_ID'], app.config['ADMIN_PW']):
-                    raise HTTPException('', Response(
-                        "Please log in.", 401,
-                        {'WWW-Authenticate': 'Basic realm="Login Required"'}
-                    ))
-                return True
-
-        admin.add_view(ModelView(Student, db.session))
-        admin.add_view(ModelView(School, db.session))
-        admin.add_view(ModelView(MenuRating, db.session))
-        admin.add_view(ModelView(MealBoard, db.session))
-        admin.add_view(ModelView(MealBoardLikes, db.session))
-        admin.add_view(ModelView(MealRatingQuestion, db.session))
+    # if not get_host_type():
+    #
+    #     # set optional bootswatch theme
+    #     app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+    #
+    #     admin = Admin(app, name='microblog', template_mode='bootstrap3')
+    #     # Add administrative views here
+    #
+    #
+    #
+    #     class ModelView(flask_admin.contrib.sqla.ModelView):
+    #         def is_accessible(self):
+    #             auth = request.authorization or request.environ.get('REMOTE_USER')  # workaround for Apache
+    #             if not auth or (auth.username, auth.password) != (app.config['ADMIN_ID'], app.config['ADMIN_PW']):
+    #                 raise HTTPException('', Response(
+    #                     "Please log in.", 401,
+    #                     {'WWW-Authenticate': 'Basic realm="Login Required"'}
+    #                 ))
+    #             return True
+    #
+    #     admin.add_view(ModelView(Student, db.session))
+    #     admin.add_view(ModelView(School, db.session))
+    #     admin.add_view(ModelView(MenuRating, db.session))
+    #     admin.add_view(ModelView(MealBoard, db.session))
+    #     admin.add_view(ModelView(MealBoardLikes, db.session))
+    #     admin.add_view(ModelView(MealRatingQuestion, db.session))
 
 
 

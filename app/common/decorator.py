@@ -56,7 +56,7 @@ def return_500_if_errors(f):
         except Exception as e:
 
             print(traceback.print_exc())
-            if is_local():
+            if get_host_type() == "LOCAL":
                 return {
                            "message": "error"
                        }, 500
@@ -101,7 +101,7 @@ def return_500_if_errors(f):
                     },
                     {
                         "title": str(datetime.now()) + ", " + (
-                            "로컬에서 발생" if is_local() else "외부에서 발생") + ", " + ip_address,
+                            get_host_type() + "에서 발생") + ", " + ip_address,
                         "color": 0
                     },
 
