@@ -1,7 +1,7 @@
 import re
 import datetime
 from email.mime.multipart import MIMEMultipart
-
+from config import NEIS_KEY
 import requests
 import json
 
@@ -64,7 +64,7 @@ def datetime_to_str(dt):
 
 
 def get_day_meal(school, date):
-    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
@@ -83,8 +83,42 @@ def get_day_meal(school, date):
     return lunch_meal_data
 
 
+
+def get_day_meal_with_alg(school, date):
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
+    print(url)
+    meal_response = requests.request("GET", url)
+    meal_data = json.loads(meal_response.text)
+    if "mealServiceDietInfo" not in meal_data:
+        return None
+    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+
+    lunch_meal_data = []
+    for time_meal_data in day_meal_data:
+        if time_meal_data["MMEAL_SC_NM"] == "중식":
+            lunch_meal_data = [{ "menu_name" : remove_allergy(menu), "alg" : get_allergy(menu)} for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+
+    if len(lunch_meal_data) == 0:
+        return None
+
+    return lunch_meal_data
+
+
+def get_allergy(menu):
+    alg_list = re.findall("\([^)]*\)|[0-9]*\.", menu)
+    result = []
+    for i, alg in enumerate(alg_list):
+        if alg[-1] != "." or not alg[:-1].isdigit():
+            pass
+        else:
+            result.append(int(alg[:-1]))
+
+    return result
+
+
+
 def get_month_meal(school, year, month):
-    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month.zfill(2)}01&MLSV_TO_YMD={year}{month.zfill(2)}31&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month.zfill(2)}01&MLSV_TO_YMD={year}{month.zfill(2)}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
@@ -105,7 +139,7 @@ def get_month_meal(school, year, month):
 
 
 def get_range_meal(school, start_date, end_date):
-    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a&pSize=365&Type=json"
+    url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
@@ -148,7 +182,7 @@ def get_question_rows(menu):
 
 
 def get_school_by_school_name(school_name):
-    url = f"https://open.neis.go.kr/hub/schoolInfo?&SCHUL_NM={school_name}&Type=json&KEY=cea5e646436e4f5b9c8797b9e4ec7a2a"
+    url = f"https://open.neis.go.kr/hub/schoolInfo?&SCHUL_NM={school_name}&Type=json&KEY={NEIS_KEY}"
     response = requests.request("GET", url)
 
     school_data = json.loads(response.text)
@@ -267,7 +301,7 @@ def fetch_spread_sheet():
     return len(data)
 
 
-fetch_spread_sheet()
+# fetch_spread_sheet()
 
 
 
