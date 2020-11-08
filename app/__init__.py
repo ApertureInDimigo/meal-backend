@@ -34,7 +34,7 @@ def create_app(config_filename):
         cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
     elif host_type == "VULTR":
-        cred = credentials.Certificate("./meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        cred = credentials.Certificate("/var/yammeal/meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
     else:
         cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
