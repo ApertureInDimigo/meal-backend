@@ -279,6 +279,9 @@ class _RatingQuestion(Resource):
         student, school = get_identify(student_id)
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
+        if lunch_meal_data is None:
+            return {"message" : "급식이 존재하지 않습니다."}, 404
+
         question_dict = []
 
         for index, menu in enumerate(lunch_meal_data):
