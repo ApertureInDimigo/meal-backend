@@ -303,7 +303,7 @@ def fetch_spread_sheet():
     return len(data)
 
 
-fetch_spread_sheet()
+# fetch_spread_sheet()
 
 
 
