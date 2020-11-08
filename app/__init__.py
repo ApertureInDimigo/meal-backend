@@ -24,14 +24,20 @@ import flask_admin.contrib.sqla
 # http://flask.pocoo.org/docs/0.10/patterns/appfactories/
 def create_app(config_filename):
 
-    import app.cache
+    from app.cache import cache
     from app.scheduler import sched
     # from app.redis import redis_client
     import app.redis
 
 
-    if is_local() is True:
+
+
+    host_type = get_host_type()
+    if host_type == "LOCAL":
         cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        firebase = firebase_admin.initialize_app(cred)
+    elif host_type == "VULTR":
+        cred = credentials.Certificate("/var/yammeal/meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
         firebase = firebase_admin.initialize_app(cred)
     else:
         cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
@@ -54,6 +60,51 @@ def create_app(config_filename):
     from app.db import db, Student, School, MealRatingQuestion, MenuRating , MealBoardLikes, MealBoard
     db.init_app(app)
     db.app = app
+    cache.init_app(app)
+
+    def fetch_spread_sheet():
+        from app.cache import cache
+        from collections import namedtuple
+        gc = gspread.authorize(GOOGLE_CREDENTIALS).open("급식질문")
+
+        wks = gc.get_worksheet(0)
+
+        rows = wks.get_all_values()
+        print(rows)
+        try:
+
+            data = []
+            for row in rows[1:]:
+                # row_tuple = Munhak(*row)
+                # row_tuple = row_tuple._replace(keywords=json.loads(row_tuple.keywords))
+                # if row_tuple.is_available == "TRUE":
+                #     data.append(row_tuple)
+                temp_dict = dict(zip(rows[0], row))
+                if temp_dict["is_available"] == "TRUE":
+                    temp_dict["options"] = json.loads(temp_dict["options"])
+                    temp_dict["question_seq"] = int(temp_dict["question_seq"])
+                    temp_dict["priority"] = int(temp_dict["priority"])
+                    data.append(temp_dict)
+
+        except Exception as e:
+            print(e)
+
+        # global munhak_rows_data
+        # munhak_rows_data = data
+        #
+        # munhak_quiz_rows_data = [munhak_row for munhak_row in munhak_rows_data if len(munhak_row["keywords"]) != 0]
+        #
+        print(data)
+        cache.set('question_rows_data', data, timeout=99999999999999999)
+        # cache.set('munhak_quiz_rows_data', munhak_quiz_rows_data, timeout=99999999999999999)
+        # print(data)
+        # # print(munhak_rows)
+        # return len(data)
+        return len(data)
+
+    fetch_spread_sheet()
+
+
     # sched.init_app(app)
     # redis_client.init_app(app)
 
@@ -92,32 +143,32 @@ def create_app(config_filename):
                 post_row.views += view_count_list[index]
             db.session.commit()
 
-    if not is_local():
-
-        # set optional bootswatch theme
-        app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
-
-        admin = Admin(app, name='microblog', template_mode='bootstrap3')
-        # Add administrative views here
-
-
-
-        class ModelView(flask_admin.contrib.sqla.ModelView):
-            def is_accessible(self):
-                auth = request.authorization or request.environ.get('REMOTE_USER')  # workaround for Apache
-                if not auth or (auth.username, auth.password) != (app.config['ADMIN_ID'], app.config['ADMIN_PW']):
-                    raise HTTPException('', Response(
-                        "Please log in.", 401,
-                        {'WWW-Authenticate': 'Basic realm="Login Required"'}
-                    ))
-                return True
-
-        admin.add_view(ModelView(Student, db.session))
-        admin.add_view(ModelView(School, db.session))
-        admin.add_view(ModelView(MenuRating, db.session))
-        admin.add_view(ModelView(MealBoard, db.session))
-        admin.add_view(ModelView(MealBoardLikes, db.session))
-        admin.add_view(ModelView(MealRatingQuestion, db.session))
+    # if not get_host_type():
+    #
+    #     # set optional bootswatch theme
+    #     app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+    #
+    #     admin = Admin(app, name='microblog', template_mode='bootstrap3')
+    #     # Add administrative views here
+    #
+    #
+    #
+    #     class ModelView(flask_admin.contrib.sqla.ModelView):
+    #         def is_accessible(self):
+    #             auth = request.authorization or request.environ.get('REMOTE_USER')  # workaround for Apache
+    #             if not auth or (auth.username, auth.password) != (app.config['ADMIN_ID'], app.config['ADMIN_PW']):
+    #                 raise HTTPException('', Response(
+    #                     "Please log in.", 401,
+    #                     {'WWW-Authenticate': 'Basic realm="Login Required"'}
+    #                 ))
+    #             return True
+    #
+    #     admin.add_view(ModelView(Student, db.session))
+    #     admin.add_view(ModelView(School, db.session))
+    #     admin.add_view(ModelView(MenuRating, db.session))
+    #     admin.add_view(ModelView(MealBoard, db.session))
+    #     admin.add_view(ModelView(MealBoardLikes, db.session))
+    #     admin.add_view(ModelView(MealRatingQuestion, db.session))
 
 
 

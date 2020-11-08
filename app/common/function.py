@@ -206,18 +206,20 @@ def dict_mean(dict_list):
     return mean_dict
 
 
-def is_local():
+def get_host_type():
     import socket
     import os
 
     hostname = socket.gethostname()
-    isLocal = True
     if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
-        isLocal = True
+        host = "LOCAL"
+    elif hostname[:5] == "vultr":
+        host = "VULTR"
     else:
-        isLocal = False
+        host = "HEROKU"
+    return host
 
-    return isLocal
+
 
 
 def send_discord_webhook(webhook_body):
@@ -301,7 +303,7 @@ def fetch_spread_sheet():
     return len(data)
 
 
-fetch_spread_sheet()
+# fetch_spread_sheet()
 
 
 
