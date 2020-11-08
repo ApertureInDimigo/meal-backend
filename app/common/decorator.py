@@ -28,11 +28,13 @@ def login_required(f):  # 1)
 
             if payload is None: return {"message": "토큰이 유효하지 않습니다."}, 401
 
-            user_id = payload["data"]["id"] if payload["data"]["type"] == "normal" else payload["data"]["kakaoId"]
-            user_seq = payload["data"]["userSeq"]
-            g.user_seq = user_seq
-            g.user_id = user_id
-
+            try:
+                user_id = payload["data"]["id"] if payload["data"]["type"] == "normal" else payload["data"]["kakaoId"]
+                user_seq = payload["data"]["userSeq"]
+                g.user_seq = user_seq
+                g.user_id = user_id
+            except:
+                return {"message": "토큰이 유효하지 않습니다."}, 401
         else:
             return {"message": "토큰이 유효하지 않습니다."}, 401  # 9)
 
