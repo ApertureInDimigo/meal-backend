@@ -227,10 +227,13 @@ class _RatingStar(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
-            .filter(MenuRating.star.isnot(None)).first()
-        if old_rating_row is not None:
-            return {"message": "이미 평가했습니다."}, 409
+                                                    menu_date=str_to_date(args["menu_date"])) \
+            .filter(MenuRating.star.isnot(None)).all()
+
+        old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
+
+        # if old_rating_row is not None:
+        #     return {"message": "이미 평가했습니다."}, 409
 
         menus = args["menus"]
 
@@ -240,6 +243,10 @@ class _RatingStar(Resource):
         for index, menu in enumerate(menus):
             if 0 <= menu["menu_seq"] <= len(lunch_meal_data) - 1:
                 if 1 <= menu["star"] <= 5:
+
+                    if menu["menu_seq"] in old_rating_menu_seq_list:
+                        continue
+
                     rating_row = MenuRating(
                         school=school,
                         student=student,
