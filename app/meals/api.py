@@ -124,8 +124,8 @@ class _RatingAnswerMy(Resource):
             for question_row in question_rows_data:
                 if question_row["question_seq"] == int(question_seq):
                     answers.append({"questionSeq": int(question_seq), "answer": answer,
-                                     "options" : question_row["options"], "content" : question_row["content"]
-                                     })
+                                    "options": question_row["options"], "content": question_row["content"]
+                                    })
                 continue
 
         return {
@@ -136,8 +136,6 @@ class _RatingAnswerMy(Resource):
 
                    }
                }, 200
-
-
 
 
 class _RatingStarMy(Resource):
@@ -359,10 +357,8 @@ class _RatingAnswer(Resource):
                                                     menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.questions.isnot(None)).first()
 
-
         if old_rating_row is None:
             return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
-
 
         from sqlalchemy.orm import load_only
         rating_rows = MenuRating.query.options(
@@ -381,17 +377,16 @@ class _RatingAnswer(Resource):
             for question_row in question_rows_data:
                 if question_row["question_seq"] == int(question_seq):
                     answers.append({"questionSeq": int(question_seq), "answerMean": answer_mean,
-                                     "options" : question_row["options"], "content" : question_row["content"]
-                                     })
+                                    "options": question_row["options"], "content": question_row["content"]
+                                    })
                 continue
-
 
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows[0].menu_name,
                        "answers":
-                          answers,
+                           answers,
 
                    }
                }, 200
@@ -595,6 +590,37 @@ class _RatingFavorite(Resource):
             .filter(MenuRating.is_favorite.isnot(None)).all()
         if old_rating_row is None:
             return {"message": "좋아하지 않는 메뉴입니다."}, 409
+
+        for rating_row in old_rating_row:
+            db.session.delete(rating_row)
+        db.session.commit()
+
+        return {
+                   "message": "정상적으로 처리되었습니다."
+               }, 200
+
+
+class _RatingFavoriteAll(Resource):
+
+    @return_500_if_errors
+    @login_required
+    def delete(self):
+
+        student_id = g.user_id
+        args = request.args
+
+
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        # if args["menuName"] not in lunch_meal_data:
+        #     return {"message": "급식이 존재하지 않습니다."}, 404
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student).filter(
+            MenuRating.is_favorite.isnot(None)).all()
+        if old_rating_row is None:
+            return {"message": "좋아하는 메뉴가 없습니다."}, 404
 
         for rating_row in old_rating_row:
             db.session.delete(rating_row)
