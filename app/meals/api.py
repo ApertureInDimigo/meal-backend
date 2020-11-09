@@ -73,10 +73,6 @@ class _Menu_v2(Resource):
         }
 
 
-
-
-
-
 class _RatingAnswerMy(Resource):
 
     @return_500_if_errors
@@ -177,13 +173,17 @@ class _RatingStar(Resource):
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
-            .filter(MenuRating.star.isnot(None)).first()
-        if old_rating_row is None:
-            return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+                                                    menu_date=str_to_date(args["menu_date"])) \
+            .filter(MenuRating.star.isnot(None)).all()
+
+        # if old_rating_row is None:
+        #     return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+
+        old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
 
         rating_rows = MenuRating.query.filter_by(school=school, menu_date=str_to_date(args["menu_date"]),
-                                                 banned=False).filter(MenuRating.star.isnot(None)).all()
+                                                 banned=False).filter(MenuRating.star.isnot(None)).filter(
+            MenuRating.menu_seq.in_(old_rating_menu_seq_list)).all()
 
         rating_data = defaultdict(list)
 
@@ -220,8 +220,6 @@ class _RatingStar(Resource):
         print(args)
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-
-
 
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
@@ -288,7 +286,7 @@ class _RatingQuestion(Resource):
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         if lunch_meal_data is None:
-            return {"message" : "급식이 존재하지 않습니다."}, 404
+            return {"message": "급식이 존재하지 않습니다."}, 404
 
         question_dict = []
 
@@ -333,8 +331,12 @@ class _RatingAnswer(Resource):
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                     menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.questions.isnot(None)).first()
+
+
         if old_rating_row is None:
             return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
+
+
         from sqlalchemy.orm import load_only
         rating_rows = MenuRating.query.options(
             load_only("menu_name", "questions")
