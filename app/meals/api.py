@@ -106,18 +106,38 @@ class _RatingAnswerMy(Resource):
 
         question_rows_data = cache.get("question_rows_data")
 
+        # return {
+        #            "data": {
+        #                "menuSeq": args["menu_seq"],
+        #                "menuName": rating_rows.menu_name,
+        #                "answers":
+        #                    [{"questionSeq": int(question_seq), "answer": answer,
+        #                      "options": [question_row["options"] for question_row in question_rows_data if
+        #                                  question_row["question_seq"] == int(question_seq)]}
+        #                     for question_seq, answer in rating_rows.questions.items()],
+        #
+        #            }
+        #        }, 200
+
+        answers = []
+        for question_seq, answer in rating_rows.questions.items():
+            for question_row in question_rows_data:
+                if question_row["question_seq"] == int(question_seq):
+                    answers.append({"questionSeq": int(question_seq), "answer": answer,
+                                     "options" : question_row["options"], "content" : question_row["content"]
+                                     })
+                continue
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows.menu_name,
-                       "answers":
-                           [{"questionSeq": int(question_seq), "answer": answer,
-                             "options": [question_row["options"] for question_row in question_rows_data if
-                                         question_row["question_seq"] == int(question_seq)]}
-                            for question_seq, answer in rating_rows.questions.items()],
+                       "answers": answers
 
                    }
                }, 200
+
+
 
 
 class _RatingStarMy(Resource):
@@ -356,15 +376,22 @@ class _RatingAnswer(Resource):
         print(answer_results)
         question_rows_data = cache.get("question_rows_data")
 
+        answers = []
+        for question_seq, answer_mean in answer_results.items():
+            for question_row in question_rows_data:
+                if question_row["question_seq"] == int(question_seq):
+                    answers.append({"questionSeq": int(question_seq), "answerMean": answer_mean,
+                                     "options" : question_row["options"], "content" : question_row["content"]
+                                     })
+                continue
+
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows[0].menu_name,
                        "answers":
-                           [{"questionSeq": int(question_seq), "answerMean": answer_mean,
-                             "options": [question_row["options"] for question_row in question_rows_data if
-                                         question_row["question_seq"] == int(question_seq)]}
-                            for question_seq, answer_mean in answer_results.items()],
+                          answers,
 
                    }
                }, 200
