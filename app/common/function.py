@@ -338,7 +338,7 @@ def send_mail(receiver, title, html):
     msg["From"] = "YAMMEAL"
     msg["To"] = receiver  # 수신 메일
     # 메일 보내기
-    s.sendmail('YAMMEAL', 'jjy37777@naver.com', msg.as_string())
+    s.sendmail('YAMMEAL', receiver, msg.as_string())
 
     # 세션 종료
     s.quit()
