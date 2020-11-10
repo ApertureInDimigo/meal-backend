@@ -58,7 +58,7 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
             temp = re.sub("\d*$","",temp)
             temp = re.sub("/$","",temp)
             temp = re.sub("[^망]]고$","",temp)
-            temp = re.sub("[남고|광남고|여고|공고]$", "", temp)
+            temp = re.sub("[남고|여고|공고]$", "", temp)
             temp = re.sub("과고[^구마]","",temp) #과고구마
 
 
