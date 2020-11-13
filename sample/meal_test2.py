@@ -8,7 +8,8 @@ import clipboard
 from sample import menu_classifier
 
 target_word_list = set()
-target_word = "남고"
+target_word = "공고"
+
 def add_target_word_list(data):
 
     tmp = (data["menu"], data["schoolName"])

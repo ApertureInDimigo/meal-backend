@@ -41,7 +41,9 @@ class _Menu(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
         lunch_meal_data = get_day_meal(school, args["menu_date"])
         return {
             "data": lunch_meal_data
@@ -63,15 +65,12 @@ class _Menu_v2(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"])
         return {
             "data": lunch_meal_data
         }
-
-
-
-
 
 
 class _RatingAnswerMy(Resource):
@@ -89,7 +88,8 @@ class _RatingAnswerMy(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                     menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
@@ -106,15 +106,33 @@ class _RatingAnswerMy(Resource):
 
         question_rows_data = cache.get("question_rows_data")
 
+        # return {
+        #            "data": {
+        #                "menuSeq": args["menu_seq"],
+        #                "menuName": rating_rows.menu_name,
+        #                "answers":
+        #                    [{"questionSeq": int(question_seq), "answer": answer,
+        #                      "options": [question_row["options"] for question_row in question_rows_data if
+        #                                  question_row["question_seq"] == int(question_seq)]}
+        #                     for question_seq, answer in rating_rows.questions.items()],
+        #
+        #            }
+        #        }, 200
+
+        answers = []
+        for question_seq, answer in rating_rows.questions.items():
+            for question_row in question_rows_data:
+                if question_row["question_seq"] == int(question_seq):
+                    answers.append({"questionSeq": int(question_seq), "answer": answer,
+                                    "options": question_row["options"], "content": question_row["content"]
+                                    })
+                continue
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows.menu_name,
-                       "answers":
-                           [{"questionSeq": int(question_seq), "answer": answer,
-                             "options": [question_row["options"] for question_row in question_rows_data if
-                                         question_row["question_seq"] == int(question_seq)]}
-                            for question_seq, answer in rating_rows.questions.items()],
+                       "answers": answers
 
                    }
                }, 200
@@ -134,7 +152,8 @@ class _RatingStarMy(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         rating_rows = MenuRating.query.filter_by(student=student, school=school, banned=False,
                                                  menu_date=str_to_date(args["menu_date"])).filter(
@@ -168,16 +187,21 @@ class _RatingStar(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
-            .filter(MenuRating.star.isnot(None)).first()
-        if old_rating_row is None:
-            return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+                                                    menu_date=str_to_date(args["menu_date"])) \
+            .filter(MenuRating.star.isnot(None)).all()
+
+        # if old_rating_row is None:
+        #     return {"message": "평가한 후에 별점을 볼 수 있습니다."}, 409
+
+        old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
 
         rating_rows = MenuRating.query.filter_by(school=school, menu_date=str_to_date(args["menu_date"]),
-                                                 banned=False).filter(MenuRating.star.isnot(None)).all()
+                                                 banned=False).filter(MenuRating.star.isnot(None)).filter(
+            MenuRating.menu_seq.in_(old_rating_menu_seq_list)).all()
 
         rating_data = defaultdict(list)
 
@@ -212,9 +236,8 @@ class _RatingStar(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
         print(args)
-        student, school = get_identify(student_id)
-
-
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
@@ -222,10 +245,13 @@ class _RatingStar(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=0) \
-            .filter(MenuRating.star.isnot(None)).first()
-        if old_rating_row is not None:
-            return {"message": "이미 평가했습니다."}, 409
+                                                    menu_date=str_to_date(args["menu_date"])) \
+            .filter(MenuRating.star.isnot(None)).all()
+
+        old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
+
+        # if old_rating_row is not None:
+        #     return {"message": "이미 평가했습니다."}, 409
 
         menus = args["menus"]
 
@@ -235,6 +261,10 @@ class _RatingStar(Resource):
         for index, menu in enumerate(menus):
             if 0 <= menu["menu_seq"] <= len(lunch_meal_data) - 1:
                 if 1 <= menu["star"] <= 5:
+
+                    if menu["menu_seq"] in old_rating_menu_seq_list:
+                        continue
+
                     rating_row = MenuRating(
                         school=school,
                         student=student,
@@ -276,11 +306,12 @@ class _RatingQuestion(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         if lunch_meal_data is None:
-            return {"message" : "급식이 존재하지 않습니다."}, 404
+            return {"message": "급식이 존재하지 않습니다."}, 404
 
         question_dict = []
 
@@ -305,6 +336,12 @@ class _RatingQuestion(Resource):
         }
 
 
+
+
+
+
+
+
 class _RatingAnswer(Resource):
     @return_500_if_errors
     @login_required
@@ -319,13 +356,16 @@ class _RatingAnswer(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                     menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
             .filter(MenuRating.questions.isnot(None)).first()
+
         if old_rating_row is None:
             return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
+
         from sqlalchemy.orm import load_only
         rating_rows = MenuRating.query.options(
             load_only("menu_name", "questions")
@@ -338,15 +378,21 @@ class _RatingAnswer(Resource):
         print(answer_results)
         question_rows_data = cache.get("question_rows_data")
 
+        answers = []
+        for question_seq, answer_mean in answer_results.items():
+            for question_row in question_rows_data:
+                if question_row["question_seq"] == int(question_seq):
+                    answers.append({"questionSeq": int(question_seq), "answerMean": answer_mean,
+                                    "options": question_row["options"], "content": question_row["content"]
+                                    })
+                continue
+
         return {
                    "data": {
                        "menuSeq": args["menu_seq"],
                        "menuName": rating_rows[0].menu_name,
                        "answers":
-                           [{"questionSeq": int(question_seq), "answerMean": answer_mean,
-                             "options": [question_row["options"] for question_row in question_rows_data if
-                                         question_row["question_seq"] == int(question_seq)]}
-                            for question_seq, answer_mean in answer_results.items()],
+                           answers,
 
                    }
                }, 200
@@ -363,7 +409,8 @@ class _RatingAnswer(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         menu = args["menu"]
         menu_seq = menu["menu_seq"]
@@ -442,7 +489,8 @@ class _RatingFavorite(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         rating_rows = db.session.query().with_entities(MenuRating.menu_name).filter_by(school=school,
                                                                                        student=student).filter(
@@ -486,7 +534,8 @@ class _RatingFavorite(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         # if args["menuName"] not in lunch_meal_data:
@@ -535,7 +584,8 @@ class _RatingFavorite(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         # if args["menuName"] not in lunch_meal_data:
@@ -546,6 +596,37 @@ class _RatingFavorite(Resource):
             .filter(MenuRating.is_favorite.isnot(None)).all()
         if old_rating_row is None:
             return {"message": "좋아하지 않는 메뉴입니다."}, 409
+
+        for rating_row in old_rating_row:
+            db.session.delete(rating_row)
+        db.session.commit()
+
+        return {
+                   "message": "정상적으로 처리되었습니다."
+               }, 200
+
+
+class _RatingFavoriteAll(Resource):
+
+    @return_500_if_errors
+    @login_required
+    def delete(self):
+
+        student_id = g.user_id
+        args = request.args
+
+
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        # if args["menuName"] not in lunch_meal_data:
+        #     return {"message": "급식이 존재하지 않습니다."}, 404
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student).filter(
+            MenuRating.is_favorite.isnot(None)).all()
+        if old_rating_row is None:
+            return {"message": "좋아하는 메뉴가 없습니다."}, 404
 
         for rating_row in old_rating_row:
             db.session.delete(rating_row)

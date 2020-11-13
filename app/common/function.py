@@ -5,7 +5,7 @@ from config import NEIS_KEY
 import requests
 import json
 
-from flask import copy_current_request_context, g, render_template
+from flask import copy_current_request_context, g, render_template, abort
 
 from app.db import Student, MealRatingQuestion, MealBoard
 from sample.menu_classifier import classify_menu, get_menu_category_list
@@ -160,8 +160,11 @@ def get_range_meal(school, start_date, end_date):
 
 
 def get_identify(student_id = None):
-    student = Student.query.filter_by(student_seq=g.user_seq).first()
-    school = student.school
+    try:
+        student = Student.query.filter_by(student_seq=g.user_seq).first()
+        school = student.school
+    except:
+        return None
     return student, school
 
 
@@ -335,7 +338,7 @@ def send_mail(receiver, title, html):
     msg["From"] = "YAMMEAL"
     msg["To"] = receiver  # 수신 메일
     # 메일 보내기
-    s.sendmail('YAMMEAL', 'jjy37777@naver.com', msg.as_string())
+    s.sendmail('YAMMEAL', receiver, msg.as_string())
 
     # 세션 종료
     s.quit()

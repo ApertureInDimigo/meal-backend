@@ -254,7 +254,8 @@ class PasswordReset(Resource):
             data = PasswordSchema().load(args)
         except marshmallow.exceptions.ValidationError as e:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
-        student, _ = get_identify()
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         password_salt = bcrypt.gensalt()
         # print(salt)

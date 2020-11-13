@@ -104,7 +104,10 @@ class _MealBoard(Resource):
 
         image.save(get_absoulute_path("./temp/image.jpg"), quality=85, optimize=True)
 
-        student, school = get_identify(student_id)
+        student, school = \
+            get_identify() or None, None
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
         lunch_meal_data = get_day_meal(school, args["menu_date"])
 
         bucket = firebase_admin.storage.bucket(name="meal-project-fa430.appspot.com", app=None)
@@ -141,7 +144,8 @@ class _MealBoardMy(Resource):
     def get(self):
 
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         args = request.args
         print(args)
@@ -189,7 +193,8 @@ class _MealBoardDetail(Resource):
         # post_seq번째 글만 가져옴
 
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         if post_seq is None or type(post_seq) != int:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
@@ -235,7 +240,8 @@ class _MealBoardDetail(Resource):
     def delete(self, post_seq):
         # 글 삭제
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         if post_seq is None or type(post_seq) != int:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 40
 
@@ -256,7 +262,8 @@ class _MealBoardLike(Resource):
     @login_required
     def post(self, post_seq):
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         if post_seq is None or type(post_seq) != int:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
@@ -285,7 +292,8 @@ class _MealBoardLike(Resource):
     @login_required
     def delete(self, post_seq):
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
         if post_seq is None or type(post_seq) != int:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
@@ -313,7 +321,8 @@ class _MealBoardLikeMy(Resource):
         if post_seq is None or type(post_seq) != int:
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
         student_id = g.user_id
-        student, school = get_identify(student_id)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         post_row = MealBoard.query.filter_by(post_seq=post_seq).first()
         if post_row is None:
