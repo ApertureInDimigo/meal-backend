@@ -18,7 +18,7 @@ def shutdown_session(exception=None):
 # @app.route('/<string:path>', methods=['GET'])
 def catch_all(path):
 
-    return render_template('index.html')
+    return render_template('./index/index.html')
 
 @app.route('/privacy')
 def privacy():
