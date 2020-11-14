@@ -244,7 +244,7 @@ class _RatingStar(Resource):
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
         print(args)
 
-        if is_same_date(str_to_date(args["menu_date"]), datetime.now()):
+        if not is_same_date(str_to_date(args["menu_date"]), datetime.now()):
             return {"message" : "당일에만 평가할 수 있습니다."}, 406
 
 
@@ -424,7 +424,7 @@ class _RatingAnswer(Resource):
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
 
-        if is_same_date(str_to_date(args["menu_date"]), datetime.now()):
+        if not is_same_date(str_to_date(args["menu_date"]), datetime.now()):
             return {"message" : "당일에만 평가할 수 있습니다."}, 406
 
         student, school = get_identify() or (None, None)
