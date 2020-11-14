@@ -203,6 +203,9 @@ def get_school_by_school_name(school_name):
 
 
 def dict_mean(dict_list):
+    if len(dict_list) == 0:
+        return {}
+
     mean_dict = {}
     for key in dict_list[0].keys():
         mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)

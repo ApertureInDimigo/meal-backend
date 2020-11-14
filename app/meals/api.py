@@ -366,7 +366,7 @@ class _RatingAnswer(Resource):
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-        
+
         if is_same_date(datetime.now(), str_to_date(args["menu_date"])):
             old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                         menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
@@ -384,6 +384,11 @@ class _RatingAnswer(Resource):
             banned=False).filter(MenuRating.questions.isnot(None)).all()
 
         answer_results = dict_mean([rating_row.questions for rating_row in rating_rows])
+
+        if len(answer_results) == 0:
+            return {"message" : "응답된 질문이 없습니다."}, 404
+
+
         print(answer_results)
         question_rows_data = cache.get("question_rows_data")
 
