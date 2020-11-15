@@ -108,7 +108,7 @@ class _MealBoard(Resource):
             get_identify() or None, None
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
         bucket = firebase_admin.storage.bucket(name="meal-project-fa430.appspot.com", app=None)
         # bucket.put(image_file)
