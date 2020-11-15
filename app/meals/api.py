@@ -9,7 +9,7 @@ import bcrypt
 from marshmallow import Schema, fields, pprint, validate
 
 from app.meals.form import RatingStarSchema, MenuDateSchema, RatingQuestionSchema, \
-    MenuDateSeqSchema, MonthDaySchema
+    MenuDateSeqSchema, MonthDaySchema, MenuDateSeqNameSchema
 from app.students.form import *
 
 from flask import request, g
@@ -597,21 +597,27 @@ class _RatingFavorite(Resource):
         args = request.args
         try:
 
-            args = MenuDateSeqSchema().load(args)
+            args = MenuDateSeqNameSchema().load(args)
         except marshmallow.exceptions.ValidationError as e:
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
 
-        # if args["menuName"] not in lunch_meal_data:
-        #     return {"message": "급식이 존재하지 않습니다."}, 404
+        if "menu_name" in args and args["menu_name"] is not None:
+            old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                        menu_name=args["menu_name"]) \
+                .filter(MenuRating.is_favorite.isnot(None)).all()
+        else:
+            lunch_meal_data = get_day_meal(school, args["menu_date"])
 
-        old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_name=lunch_meal_data[args["menu_seq"]]) \
-            .filter(MenuRating.is_favorite.isnot(None)).all()
+            # if args["menuName"] not in lunch_meal_data:
+            #     return {"message": "급식이 존재하지 않습니다."}, 404
+
+            old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                        menu_name=lunch_meal_data[args["menu_seq"]]) \
+                .filter(MenuRating.is_favorite.isnot(None)).all()
         if old_rating_row is None:
             return {"message": "좋아하지 않는 메뉴입니다."}, 409
 
@@ -625,6 +631,33 @@ class _RatingFavorite(Resource):
 
 
 class _RatingFavoriteAll(Resource):
+
+    @return_500_if_errors
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.args
+        print(args)
+        try:
+            args = MonthDaySchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        rating_rows = db.session.query().with_entities(MenuRating.menu_name).filter_by(school=school,
+                                                                                       student=student).filter(
+            MenuRating.is_favorite.isnot(None)).all()
+        favorite_name_list = sorted([rating_row.menu_name for rating_row in rating_rows])
+        # return
+
+
+        return {
+                   "data": favorite_name_list
+               }, 200
+
 
     @return_500_if_errors
     @login_required
