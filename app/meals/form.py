@@ -44,6 +44,11 @@ class MenuDateSeqSchema(Schema):
     menu_date = fields.String(required=True, data_key="menuDate")
     menu_seq = fields.Integer(required=True, data_key="menuSeq")
 
+class MenuDateSeqNameSchema(Schema):
+    menu_date = fields.String(required=False, data_key="menuDate")
+    menu_seq = fields.Integer(required=False, data_key="menuSeq")
+    menu_name = fields.String(required=False, data_key="menuName")
+
 
 class RatingQuestionSchema(Schema):
     menu_date = fields.String(required=True, data_key="menuDate", validate=date_validator)

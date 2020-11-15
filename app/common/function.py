@@ -28,9 +28,10 @@ def get_region_code(region):
     region_code_list = ["B10", "C10", "D10", "E10", "F10", "G10", "H10", "I10", "J10", "K10", "M10", "N10", "P10",
                         "Q10", "R10", "S10", "T10"]
     region_list = ["서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도", "충청북도",
-                   "충청남도", "전라북도", "전라남도", "경상북도","경상남도", "제주특별자치도"]
+                   "충청남도", "전라북도", "전라남도", "경상북도", "경상남도", "제주특별자치도"]
 
     return dict(zip(region_list, region_code_list))[region]
+
 
 def remove_allergy(str):
     temp = re.sub("\([^)]*\)|[0-9]*\.", '', str)  # 알레르기 제거
@@ -83,7 +84,6 @@ def get_day_meal(school, date):
     return lunch_meal_data
 
 
-
 def get_day_meal_with_alg(school, date):
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
@@ -96,7 +96,8 @@ def get_day_meal_with_alg(school, date):
     lunch_meal_data = []
     for time_meal_data in day_meal_data:
         if time_meal_data["MMEAL_SC_NM"] == "중식":
-            lunch_meal_data = [{ "menu_name" : remove_allergy(menu), "alg" : get_allergy(menu)} for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+            lunch_meal_data = [{"menu_name": remove_allergy(menu), "alg": get_allergy(menu)} for menu in
+                               time_meal_data["DDISH_NM"].split("<br/>")]
 
     if len(lunch_meal_data) == 0:
         return None
@@ -114,7 +115,6 @@ def get_allergy(menu):
             result.append(int(alg[:-1]))
 
     return result
-
 
 
 def get_month_meal(school, year, month):
@@ -159,7 +159,7 @@ def get_range_meal(school, start_date, end_date):
     return lunch_meal_data
 
 
-def get_identify(student_id = None):
+def get_identify(student_id=None):
     try:
         student = Student.query.filter_by(student_seq=g.user_seq).first()
         school = student.school
@@ -203,9 +203,12 @@ def get_school_by_school_name(school_name):
 
 
 def dict_mean(dict_list):
+    if len(dict_list) == 0:
+        return {}
+
     mean_dict = {}
     for key in dict_list[0].keys():
-        mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+        mean_dict[key] = sum([d[key] for d in dict_list if key in d]) / len([d[key] for d in dict_list if key in d])
     return mean_dict
 
 
@@ -221,8 +224,6 @@ def get_host_type():
     else:
         host = "HEROKU"
     return host
-
-
 
 
 def send_discord_webhook(webhook_body):
@@ -309,12 +310,10 @@ def fetch_spread_sheet():
 # fetch_spread_sheet()
 
 
-
 def send_mail(receiver, title, html):
     import smtplib
     from email.mime.text import MIMEText
     from config import MAIL_ID, MAIL_PASSWORD
-
 
     # 세션 생성
     s = smtplib.SMTP('smtp.gmail.com', 587)
@@ -343,3 +342,9 @@ def send_mail(receiver, title, html):
     # 세션 종료
     s.quit()
 
+
+def is_same_date(a, b):
+    if a.year != a.year or a.month != b.month or a.day != b.day:
+        return False
+    else:
+        return True
