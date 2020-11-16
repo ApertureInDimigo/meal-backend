@@ -40,11 +40,12 @@ class _Menu(Resource):
         except marshmallow.exceptions.ValidationError as e:
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
-
+        print(args)
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
+        # lunch_meal_data = get_range_meal(school, start_date="20201001", end_date="20201115", target_time=args["menu_time"])
         return {
             "data": lunch_meal_data
         }
@@ -67,7 +68,7 @@ class _Menu_v2(Resource):
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-        lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"])
+        lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"], target_time=args["menu_time"])
         return {
             "data": lunch_meal_data
         }
@@ -253,7 +254,7 @@ class _RatingStar(Resource):
 
 
 
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
         # if args["menuName"] not in lunch_meal_data:
         #     return {"message": "급식이 존재하지 않습니다."}, 404
@@ -322,7 +323,7 @@ class _RatingQuestion(Resource):
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
         if lunch_meal_data is None:
             return {"message": "급식이 존재하지 않습니다."}, 404
@@ -435,7 +436,7 @@ class _RatingAnswer(Resource):
         # menu_name = menu["menu_name"]
         questions = menu["questions"]
 
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
         if not (0 <= menu_seq <= len(lunch_meal_data) - 1):
             return {"message": "급식을 찾을 수 없습니다."}, 404
@@ -517,9 +518,9 @@ class _RatingFavorite(Resource):
         # return
 
         if "year" in args and "month" in args:
-            lunch_meal_list_data = get_month_meal(school, args["year"], args["month"])
+            lunch_meal_list_data = get_month_meal(school, args["year"], args["month"], target_time=args["menu_time"])
         elif args["start_date"] is not None and args["end_date"] is not None:
-            lunch_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"])
+            lunch_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"], target_time=args["menu_time"])
         print(lunch_meal_list_data)
         print(favorite_name_list)
 
@@ -554,7 +555,7 @@ class _RatingFavorite(Resource):
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-        lunch_meal_data = get_day_meal(school, args["menu_date"])
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
         # if args["menuName"] not in lunch_meal_data:
         #     return {"message": "급식이 존재하지 않습니다."}, 404
@@ -610,7 +611,7 @@ class _RatingFavorite(Resource):
                                                         menu_name=args["menu_name"]) \
                 .filter(MenuRating.is_favorite.isnot(None)).all()
         else:
-            lunch_meal_data = get_day_meal(school, args["menu_date"])
+            lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
             # if args["menuName"] not in lunch_meal_data:
             #     return {"message": "급식이 존재하지 않습니다."}, 404
