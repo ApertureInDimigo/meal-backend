@@ -136,7 +136,7 @@ def get_allergy(menu):
     return result
 
 
-def get_month_meal(school, year, month, target_time="중식"):
+def get_month_meal(school, year, month, target_time="중식", key="date"):
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month.zfill(2)}01&MLSV_TO_YMD={year}{month.zfill(2)}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
@@ -146,14 +146,25 @@ def get_month_meal(school, year, month, target_time="중식"):
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
 
     if target_time == "전체":
-        lunch_meal_data = defaultdict(dict)
-        for time_meal_data in day_meal_data:
-            lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
-                [remove_allergy(menu) for menu
-                 in
-                 time_meal_data[
-                     "DDISH_NM"].split(
-                     "<br/>")]
+        if key == "date":
+            lunch_meal_data = defaultdict(dict)
+            for time_meal_data in day_meal_data:
+                lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
+                    [remove_allergy(menu) for menu
+                     in
+                     time_meal_data[
+                         "DDISH_NM"].split(
+                         "<br/>")]
+        elif key == "time":
+            print("DD")
+            lunch_meal_data = defaultdict(list)
+            for time_meal_data in day_meal_data:
+                lunch_meal_data[time_meal_data["MMEAL_SC_NM"]].append(
+                    {time_meal_data["MLSV_YMD"]: [remove_allergy(menu) for menu
+                     in
+                     time_meal_data[
+                         "DDISH_NM"].split(
+                         "<br/>")]})
     else:
         lunch_meal_data = {}
         for time_meal_data in day_meal_data:
@@ -167,7 +178,7 @@ def get_month_meal(school, year, month, target_time="중식"):
     return lunch_meal_data
 
 
-def get_range_meal(school, start_date, end_date, target_time="중식"):
+def get_range_meal(school, start_date, end_date, target_time="중식", key="date"):
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
@@ -177,14 +188,25 @@ def get_range_meal(school, start_date, end_date, target_time="중식"):
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
 
     if target_time == "전체":
-        lunch_meal_data = defaultdict(dict)
-        for time_meal_data in day_meal_data:
-            lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
-                [remove_allergy(menu) for menu
-                 in
-                 time_meal_data[
-                     "DDISH_NM"].split(
-                     "<br/>")]
+        if key == "date":
+            lunch_meal_data = defaultdict(dict)
+            for time_meal_data in day_meal_data:
+                lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
+                    [remove_allergy(menu) for menu
+                     in
+                     time_meal_data[
+                         "DDISH_NM"].split(
+                         "<br/>")]
+        elif key == "time":
+            print("DD")
+            lunch_meal_data = defaultdict(list)
+            for time_meal_data in day_meal_data:
+                lunch_meal_data[time_meal_data["MMEAL_SC_NM"]].append(
+                    {time_meal_data["MLSV_YMD"]: [remove_allergy(menu) for menu
+                                                  in
+                                                  time_meal_data[
+                                                      "DDISH_NM"].split(
+                                                      "<br/>")]})
     else:
         lunch_meal_data = {}
         for time_meal_data in day_meal_data:

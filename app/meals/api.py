@@ -193,7 +193,6 @@ class _RatingStar(Resource):
 
         if is_same_date(datetime.now(), str_to_date(args["menu_date"])):
 
-
             old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                         menu_date=str_to_date(args["menu_date"])) \
                 .filter(MenuRating.star.isnot(None)).all()
@@ -246,13 +245,10 @@ class _RatingStar(Resource):
         print(args)
 
         if not is_same_date(str_to_date(args["menu_date"]), datetime.now()):
-            return {"message" : "당일에만 평가할 수 있습니다."}, 406
-
+            return {"message": "당일에만 평가할 수 있습니다."}, 406
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
-
-
 
         lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
@@ -370,7 +366,8 @@ class _RatingAnswer(Resource):
 
         if is_same_date(datetime.now(), str_to_date(args["menu_date"])):
             old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                        menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
+                                                        menu_date=str_to_date(args["menu_date"]),
+                                                        menu_seq=args["menu_seq"]) \
                 .filter(MenuRating.questions.isnot(None)).first()
 
             if old_rating_row is None:
@@ -387,8 +384,7 @@ class _RatingAnswer(Resource):
         answer_results = dict_mean([rating_row.questions for rating_row in rating_rows])
 
         if len(answer_results) == 0:
-            return {"message" : "응답된 질문이 없습니다."}, 404
-
+            return {"message": "응답된 질문이 없습니다."}, 404
 
         print(answer_results)
         question_rows_data = cache.get("question_rows_data")
@@ -424,9 +420,8 @@ class _RatingAnswer(Resource):
             print(e.messages)
             return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-
         if not is_same_date(str_to_date(args["menu_date"]), datetime.now()):
-            return {"message" : "당일에만 평가할 수 있습니다."}, 406
+            return {"message": "당일에만 평가할 수 있습니다."}, 406
 
         student, school = get_identify() or (None, None)
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
@@ -520,7 +515,8 @@ class _RatingFavorite(Resource):
         if "year" in args and "month" in args:
             lunch_meal_list_data = get_month_meal(school, args["year"], args["month"], target_time=args["menu_time"])
         elif args["start_date"] is not None and args["end_date"] is not None:
-            lunch_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"], target_time=args["menu_time"])
+            lunch_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"],
+                                                  target_time=args["menu_time"])
         print(lunch_meal_list_data)
         print(favorite_name_list)
 
@@ -612,6 +608,158 @@ class _RatingFavorite(Resource):
                 .filter(MenuRating.is_favorite.isnot(None)).all()
         else:
             lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
+            if lunch_meal_data is None:
+                return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+
+            # if args["menuName"] not in lunch_meal_data:
+            #     return {"message": "급식이 존재하지 않습니다."}, 404
+
+            old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                        menu_name=lunch_meal_data[args["menu_seq"]]) \
+                .filter(MenuRating.is_favorite.isnot(None)).all()
+        if old_rating_row is None:
+            return {"message": "좋아하지 않는 메뉴입니다."}, 409
+
+        for rating_row in old_rating_row:
+            db.session.delete(rating_row)
+        db.session.commit()
+
+        return {
+                   "message": "정상적으로 처리되었습니다."
+               }, 200
+
+
+class _RatingFavorite_v2(Resource):
+    @return_500_if_errors
+    @login_required
+    def get(self):
+        student_id = g.user_id
+        args = request.args
+        print(args)
+        try:
+            args = MonthDaySchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        rating_rows = db.session.query().with_entities(MenuRating.menu_name).filter_by(school=school,
+                                                                                       student=student).filter(
+            MenuRating.is_favorite.isnot(None)).all()
+        favorite_name_list = [rating_row.menu_name for rating_row in rating_rows]
+        # return
+
+        if "year" in args and "month" in args:
+            date_meal_list_data = get_month_meal(school, args["year"], args["month"], target_time="전체")
+        elif args["start_date"] is not None and args["end_date"] is not None:
+            date_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"],
+                                                  target_time="전체")
+
+        # return date_meal_list_data
+        # print(date_meal_list_data)
+        print(favorite_name_list)
+
+        favorite_dict = {}
+        for time, dates in date_meal_list_data.items():
+            time_favorite_dict = defaultdict(list)
+            for date, menus in dates.items():
+                for menu in menus:
+                    # print(menus)
+                    if menu in favorite_name_list:
+
+                        time_favorite_dict[date].append(menu)
+            if len(time_favorite_dict) != 0:
+                favorite_dict[time] = time_favorite_dict
+
+
+
+
+        if len(favorite_dict) == 0:
+            return {
+                       "message": "즐겨찾기가 없습니다."
+                   }, 404
+
+        return {
+                   "data": favorite_dict
+               }, 200
+
+    @return_500_if_errors
+    @login_required
+    def post(self):
+
+        student_id = g.user_id
+        args = request.get_json()
+        try:
+
+            args = MenuDateSeqSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+        lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
+
+        # if args["menuName"] not in lunch_meal_data:
+        #     return {"message": "급식이 존재하지 않습니다."}, 404
+
+        old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"],
+                                                    menu_time=args["menu_time"]) \
+            .filter(MenuRating.is_favorite.isnot(None)).first()
+        if old_rating_row is not None:
+            return {"message": "이미 좋아하는 메뉴입니다."}, 409
+
+        # print(args["menu_seq"], len(lunch_meal_data))
+        now = datetime.now()
+        if 0 <= args["menu_seq"] < len(lunch_meal_data):
+            rating_row = MenuRating(
+                school=school,
+                student=student,
+                menu_seq=args["menu_seq"],
+                menu_name=lunch_meal_data[args["menu_seq"]],
+                menu_date=str_to_date(args["menu_date"]),
+                menu_time=args["menu_time"],
+                is_favorite=True,
+                banned=False,
+                rating_date=now
+            )
+
+            db.session.add(rating_row)
+            db.session.commit()
+
+        else:
+            return {"message": "메뉴가 존재하지 않습니다."}, 404
+
+        return {
+                   "message": "정상적으로 처리되었습니다."
+               }, 200
+
+    @return_500_if_errors
+    @login_required
+    def delete(self):
+
+        student_id = g.user_id
+        args = request.args
+        try:
+
+            args = MenuDateSeqNameSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        if "menu_name" in args and args["menu_name"] is not None:
+            old_rating_row = MenuRating.query.filter_by(school=school, student=student,
+                                                        menu_name=args["menu_name"]) \
+                .filter(MenuRating.is_favorite.isnot(None)).all()
+        else:
+            lunch_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
 
             # if args["menuName"] not in lunch_meal_data:
             #     return {"message": "급식이 존재하지 않습니다."}, 404
@@ -654,11 +802,9 @@ class _RatingFavoriteAll(Resource):
         favorite_name_list = sorted([rating_row.menu_name for rating_row in rating_rows])
         # return
 
-
         return {
                    "data": favorite_name_list
                }, 200
-
 
     @return_500_if_errors
     @login_required
