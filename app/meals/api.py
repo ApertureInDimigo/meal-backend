@@ -261,7 +261,7 @@ class _RatingStar(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"])) \
+                                                    menu_date=str_to_date(args["menu_date"]), menu_time=args["menu_time"]) \
             .filter(MenuRating.star.isnot(None)).all()
 
         old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
@@ -287,6 +287,7 @@ class _RatingStar(Resource):
                         menu_seq=menu["menu_seq"],
                         menu_name=lunch_meal_data[menu["menu_seq"]],
                         menu_date=str_to_date(args["menu_date"]),
+                        menu_time = args["menu_time"],
                         star=menu["star"],
                         banned=False,
                         rating_date=now
