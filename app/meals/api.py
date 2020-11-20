@@ -93,8 +93,9 @@ class _RatingAnswerMy(Resource):
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"]) \
-            .filter(MenuRating.questions.isnot(None)).first()
+                                                    menu_date=str_to_date(args["menu_date"]), menu_seq=args["menu_seq"],
+                                                    menu_time=args["menu_time"]).filter(
+            MenuRating.questions.isnot(None)).first()
         if old_rating_row is None:
             return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
         from sqlalchemy.orm import load_only
@@ -102,7 +103,7 @@ class _RatingAnswerMy(Resource):
             load_only("menu_name", "questions")
         ).filter_by(
             school=school, menu_date=str_to_date(args["menu_date"]),
-            menu_seq=args["menu_seq"], student=student,
+            menu_seq=args["menu_seq"], student=student,menu_time=args["menu_time"],
             banned=False).filter(MenuRating.questions.isnot(None)).first()
 
         question_rows_data = cache.get("question_rows_data")
@@ -157,7 +158,8 @@ class _RatingStarMy(Resource):
         if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
 
         rating_rows = MenuRating.query.filter_by(student=student, school=school, banned=False,
-                                                 menu_date=str_to_date(args["menu_date"])).filter(
+                                                 menu_date=str_to_date(args["menu_date"]),
+                                                 menu_time=args["menu_time"]).filter(
             MenuRating.star.isnot(None)).all()
         if rating_rows is None:
             return {"message": "평가한 메뉴가 없습니다."}, 404
@@ -194,7 +196,8 @@ class _RatingStar(Resource):
         if is_same_date(datetime.now(), str_to_date(args["menu_date"])):
 
             old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                        menu_date=str_to_date(args["menu_date"])) \
+                                                        menu_date=str_to_date(args["menu_date"]),
+                                                        menu_time=args["menu_time"]) \
                 .filter(MenuRating.star.isnot(None)).all()
 
             # if old_rating_row is None:
@@ -203,11 +206,13 @@ class _RatingStar(Resource):
             old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
 
             rating_rows = MenuRating.query.filter_by(school=school, menu_date=str_to_date(args["menu_date"]),
+                                                     menu_time=args["menu_time"],
                                                      banned=False).filter(MenuRating.star.isnot(None)).filter(
                 MenuRating.menu_seq.in_(old_rating_menu_seq_list)).all()
 
         else:
             rating_rows = MenuRating.query.filter_by(school=school, menu_date=str_to_date(args["menu_date"]),
+                                                     menu_time=args["menu_time"],
                                                      banned=False).filter(MenuRating.star.isnot(None)).all()
 
         rating_data = defaultdict(list)
@@ -367,8 +372,8 @@ class _RatingAnswer(Resource):
         if is_same_date(datetime.now(), str_to_date(args["menu_date"])):
             old_rating_row = MenuRating.query.filter_by(school=school, student=student,
                                                         menu_date=str_to_date(args["menu_date"]),
-                                                        menu_seq=args["menu_seq"]) \
-                .filter(MenuRating.questions.isnot(None)).first()
+                                                        menu_seq=args["menu_seq"], menu_time=args["menu_time"]).filter(
+                MenuRating.questions.isnot(None)).first()
 
             if old_rating_row is None:
                 return {"message": "평가한 후에 응답 결과를 볼 수 있습니다."}, 409
@@ -378,7 +383,7 @@ class _RatingAnswer(Resource):
             load_only("menu_name", "questions")
         ).filter_by(
             school=school, menu_date=str_to_date(args["menu_date"]),
-            menu_seq=args["menu_seq"],
+            menu_seq=args["menu_seq"], menu_time=args["menu_time"],
             banned=False).filter(MenuRating.questions.isnot(None)).all()
 
         answer_results = dict_mean([rating_row.questions for rating_row in rating_rows])
@@ -439,7 +444,8 @@ class _RatingAnswer(Resource):
         menu_name = lunch_meal_data[menu_seq]
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student, menu_seq=menu_seq,
-                                                    menu_date=str_to_date(args["menu_date"])) \
+                                                    menu_date=str_to_date(args["menu_date"]),
+                                                    menu_time=args["menu_time"], ) \
             .filter(MenuRating.questions.isnot(None)).first()
         if old_rating_row is not None:
             return {"message": "이미 평가했습니다."}, 409
@@ -471,6 +477,7 @@ class _RatingAnswer(Resource):
             menu_seq=menu_seq,
             menu_name=menu_name,
             menu_date=str_to_date(args["menu_date"]),
+            menu_time=args["menu_time"],
             questions={
                 str(question["question_seq"]): question["answer"] for question in questions
             },
@@ -611,7 +618,6 @@ class _RatingFavorite(Resource):
             if lunch_meal_data is None:
                 return {"message": "파라미터 값이 유효하지 않습니다."}, 400
 
-
             # if args["menuName"] not in lunch_meal_data:
             #     return {"message": "급식이 존재하지 않습니다."}, 404
 
@@ -656,26 +662,22 @@ class _RatingFavorite_v2(Resource):
             date_meal_list_data = get_month_meal(school, args["year"], args["month"], target_time="전체")
         elif args["start_date"] is not None and args["end_date"] is not None:
             date_meal_list_data = get_range_meal(school, args["start_date"], args["end_date"],
-                                                  target_time="전체")
+                                                 target_time="전체")
 
         # return date_meal_list_data
         # print(date_meal_list_data)
         print(favorite_name_list)
 
         favorite_dict = {}
-        for time, dates in date_meal_list_data.items():
+        for date, dates in date_meal_list_data.items():
             time_favorite_dict = defaultdict(list)
-            for date, menus in dates.items():
+            for time, menus in dates.items():
                 for menu in menus:
                     # print(menus)
                     if menu in favorite_name_list:
-
-                        time_favorite_dict[date].append(menu)
+                        time_favorite_dict[time].append(menu)
             if len(time_favorite_dict) != 0:
-                favorite_dict[time] = time_favorite_dict
-
-
-
+                favorite_dict[date] = time_favorite_dict
 
         if len(favorite_dict) == 0:
             return {
