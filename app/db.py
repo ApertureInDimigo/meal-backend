@@ -66,6 +66,7 @@ class MenuRating(db.Model):
     menu_seq = db.Column(db.Integer, nullable=True)
     menu_name = db.Column(db.String(30), nullable=False)
     menu_date = db.Column(db.DateTime, nullable=False)
+    menu_time = db.Column(db.String, nullable=False, server_default="중식")
 
     star = db.Column(db.Integer, nullable=True)
     questions = db.Column(db.JSON, nullable=True)
