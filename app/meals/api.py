@@ -684,7 +684,7 @@ class _RatingFavorite_v2(Resource):
             return {
                        "message": "즐겨찾기가 없습니다."
                    }, 404
-
+        print(favorite_dict)
         return {
                    "data": favorite_dict
                }, 200

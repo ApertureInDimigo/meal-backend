@@ -31,9 +31,7 @@ class Student(db.Model):
     register_date = db.Column(db.DateTime, nullable=False)
     point = db.Column(db.Integer, nullable=False)
 
-    school_verified = db.Column(db.Boolean, nullable= False, server_default='False')
-
-
+    school_verified = db.Column(db.Boolean, nullable=False, server_default='False')
 
     gender = db.Column(db.String(10), nullable=True)
 
@@ -73,8 +71,6 @@ class MenuRating(db.Model):
 
     is_favorite = db.Column(db.Boolean, nullable=True)
 
-
-
     banned = db.Column(db.Boolean, nullable=False)
 
     rating_date = db.Column(db.DateTime, nullable=False)
@@ -96,7 +92,6 @@ class MealBoard(db.Model):
 
     views = db.Column(db.Integer, nullable=False, server_default='0')
 
-
     image_url = db.Column(db.String(500), nullable=True)
 
     banned = db.Column(db.Boolean, nullable=False)
@@ -113,7 +108,6 @@ class MealBoardLikes(db.Model):
     student_seq = db.Column(db.Integer, ForeignKey('student.student_seq', ), nullable=False)
     student = relationship("Student", backref=backref('mealboardlikes', order_by=like_seq, cascade='all,delete'))
 
-
     like_date = db.Column(db.DateTime, nullable=False)
 
 
@@ -125,8 +119,7 @@ class MealRatingQuestion(db.Model):
 
     content = db.Column(db.String, nullable=False)
 
-    options = db.Column(db.JSON, nullable = True)
-
+    options = db.Column(db.JSON, nullable=True)
 
     category = db.Column(db.String, nullable=True)
 
@@ -135,3 +128,17 @@ class MealRatingQuestion(db.Model):
     priority = db.Column(db.Integer, nullable=False)
 
     add_date = db.Column(db.DateTime, nullable=False)
+
+
+class Meal(db.Model):
+    meal_seq = db.Column(db.Integer, primary_key=True, nullable=False)
+
+    school = relationship("School", backref=backref('Meal', order_by=meal_seq, cascade='all,delete'))
+    school_seq = db.Column(db.Integer, ForeignKey('school.school_seq'), nullable=True)
+
+    menus = db.Column(db.JSON, nullable=True)
+    menu_date = db.Column(db.DateTime, nullable=False)
+    menu_time = db.Column(db.String, nullable=False, server_default="중식")
+    add_date = db.Column(db.DateTime, nullable=False)
+
+    is_alg_exist = db.Column(db.Boolean, nullable=False)
