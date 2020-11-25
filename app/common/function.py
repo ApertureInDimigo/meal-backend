@@ -1,20 +1,21 @@
 import re
 import datetime
+from datetime import datetime as dtt
 from collections import defaultdict
 from email.mime.multipart import MIMEMultipart
 from config import NEIS_KEY
 import requests
 import json
-
+from dateutil.rrule import rrule, DAILY
 from flask import copy_current_request_context, g, render_template, abort
-
+import calendar
 from app.db import Student, MealRatingQuestion, MealBoard
 from sample.menu_classifier import classify_menu, get_menu_category_list
 
 from config import DISCORD_WEBHOOK_URL
 import asyncio
 from app.redis import rd
-from app.db import db
+from app.db import *
 import sqlalchemy
 
 from config import GOOGLE_CREDENTIALS
@@ -65,13 +66,153 @@ def str_to_date(str):
     return date
 
 
+def date_to_str(d):
+    return f"{d.year}{str(d.month).zfill(2)}{str(d.day).zfill(2)}"
+
+
 def datetime_to_str(dt):
     string = dt.strpttime("%m/%d/%Y, %H:%M:%S")
     print(string)
     return string
 
 
+def get_range_meal_db(school, start_date, end_date, target_time="중식"):
+    result = []
+    school_id = school.school_id
+    if school_id == 7530560 and target_time != "중식":
+
+        start_dt = str_to_date(start_date)
+        end_dt = str_to_date(end_date)
+
+        range_date = list(rrule(DAILY, dtstart=start_dt, until=end_dt))
+
+        meal_rows = Meal.query.filter_by(school=school).filter(Meal.menu_date.in_(range_date)).all()
+        print(meal_rows)
+
+        saved_date_list = []
+        not_filled_row_list = []
+        not_filled_date_list = []
+        for meal_row in meal_rows:
+            if datetime.datetime.now() > meal_row.menu_date or meal_row.menus is not None:
+                if meal_row.menus is not None:
+                    result.append(TimeOfMeal(from_db_data={
+                        "date": date_to_str(meal_row.menu_date), "time": meal_row.menu_time, "menus": meal_row.menus
+                    }))
+
+                saved_date_list.append(meal_row.menu_date)
+
+            if meal_row.menus is None:
+                not_filled_row_list.append(meal_row)
+                not_filled_date_list.append(meal_row.menu_date)
+
+        not_saved_date_list = list(set(range_date) - set(saved_date_list))
+        print(not_saved_date_list)
+
+        for dt in not_saved_date_list:
+
+            dt_str = date_to_str(dt)
+
+            is_update = False
+
+            if dt in not_filled_date_list:  # db에 null 로 저장이 되어있음
+                meal_row = [x for x in not_filled_row_list if x.menu_date == dt][0]
+                if datetime.datetime.now() < meal_row.menu_date:  # 미래 급식일 때
+                    if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(minutes=1):  # 업데이트 되고 나서 1분 지남
+                        is_update = True
+                    else:
+                        continue
+                else:  # 과거 급식일 때
+                    if meal_row.add_date > meal_row.menu_date:  # 이미 설정 됨
+                        continue
+
+            url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
+            meal_response = requests.request("GET", url)
+            meal_data = json.loads(meal_response.text)
+
+            print(meal_data)
+
+            if is_update is True:
+                Meal.query.filter_by(school=school, menu_date=dt).delete()
+
+            if "breakfast" in meal_data:
+
+                db.session.add(
+                    Meal(school=school, menus=meal_data["breakfast"].split("/"), menu_date=dt, menu_time="조식",
+                         add_date=datetime.datetime.now(), is_alg_exist=False))
+
+                result.append(TimeOfMeal(from_db_data={
+                    "date": dt_str,
+                    "time": "조식",
+                    "menus": meal_data["breakfast"].split("/")
+
+                }))
+            else:
+
+                db.session.add(
+                    Meal(school=school, menus=None, menu_date=dt, menu_time="조식",
+                         add_date=datetime.datetime.now(), is_alg_exist=False))
+
+            if "dinner" in meal_data:
+                db.session.add(
+                    Meal(school=school, menus=meal_data["dinner"].split("/"), menu_date=dt, menu_time="석식",
+                         add_date=datetime.datetime.now(), is_alg_exist=False))
+                result.append(TimeOfMeal(from_db_data={
+                    "date": dt_str,
+                    "time": "석식",
+                    "menus": meal_data["dinner"].split("/")
+
+                }))
+            else:
+                db.session.add(
+                    Meal(school=school, menus=None, menu_date=dt, menu_time="석식",
+                         add_date=datetime.datetime.now(), is_alg_exist=False))
+
+            db.session.commit()
+
+        # for dt in rrule(DAILY, dtstart=start_dt, until=end_dt):
+        #     # print(dt.strpttime())
+        #     dt_str = date_to_str(dt)
+        #
+        #     url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
+        #     meal_response = requests.request("GET", url)
+        #     meal_data = json.loads(meal_response.text)
+        #
+        #     print(meal_data)
+        #     if "breakfast" in meal_data:
+        #
+        #         result.append(TimeOfMeal(from_db_data={
+        #             "date" : dt_str,
+        #             "time" : "조식",
+        #             "menus" : meal_data["breakfast"].split("/")
+        #
+        #         }))
+        #     if "dinner" in meal_data:
+        #         result.append(TimeOfMeal(from_db_data={
+        #             "date": dt_str,
+        #             "time": "석식",
+        #             "menus": meal_data["dinner"].split("/")
+        #
+        #         }))
+
+    return result
+
+
+class TimeOfMeal():
+    def __init__(self, from_neis_data=None, from_db_data=None):
+        if from_neis_data is not None:
+            self.menus = from_neis_data["DDISH_NM"].split("<br/>")
+            self.time = from_neis_data["MMEAL_SC_NM"]
+            self.date = from_neis_data["MLSV_YMD"]
+
+        if from_db_data is not None:
+            self.menus = from_db_data["menus"]
+            self.time = from_db_data["time"]
+            self.date = from_db_data["date"]
+
+
 def get_day_meal(school, date, target_time="중식"):
+    db_meal_data = get_range_meal_db(school, date, date, target_time)
+
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
@@ -79,44 +220,63 @@ def get_day_meal(school, date, target_time="중식"):
     if "mealServiceDietInfo" not in meal_data:
         return None
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+    print(day_meal_data)
 
     if target_time == "전체":
         lunch_meal_data = defaultdict(list)
         for time_meal_data in day_meal_data:
-            lunch_meal_data[time_meal_data["MMEAL_SC_NM"]] = [remove_allergy(menu) for menu in
-                                                              time_meal_data["DDISH_NM"].split("<br/>")]
+            lunch_meal_data[time_meal_data.time] = [remove_allergy(menu) for menu in
+                                                    time_meal_data.menus]
     else:
         lunch_meal_data = []
         for time_meal_data in day_meal_data:
-            if time_meal_data["MMEAL_SC_NM"] == target_time:
-                lunch_meal_data = [remove_allergy(menu) for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+            if time_meal_data.time == target_time:
+                lunch_meal_data = [remove_allergy(menu) for menu in time_meal_data.menus]
     if len(lunch_meal_data) == 0:
         return None
+
+    # if target_time == "전체":
+    #     lunch_meal_data = defaultdict(list)
+    #     for time_meal_data in day_meal_data:
+    #         lunch_meal_data[time_meal_data["MMEAL_SC_NM"]] = [remove_allergy(menu) for menu in
+    #                                                           time_meal_data["DDISH_NM"].split("<br/>")]
+    # else:
+    #     lunch_meal_data = []
+    #     for time_meal_data in day_meal_data:
+    #         if time_meal_data["MMEAL_SC_NM"] == target_time:
+    #             lunch_meal_data = [remove_allergy(menu) for menu in time_meal_data["DDISH_NM"].split("<br/>")]
+    # if len(lunch_meal_data) == 0:
+    #     return None
 
     return lunch_meal_data
 
 
 def get_day_meal_with_alg(school, date, target_time="중식"):
+    db_meal_data = get_range_meal_db(school, date, date, target_time)
+
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
         return None
+
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
 
     if target_time == "전체":
         lunch_meal_data = defaultdict(list)
         for time_meal_data in day_meal_data:
-            lunch_meal_data[time_meal_data["MMEAL_SC_NM"]] = [
+            lunch_meal_data[time_meal_data.time] = [
                 {"menu_name": remove_allergy(menu), "alg": get_allergy(menu)} for menu in
-                time_meal_data["DDISH_NM"].split("<br/>")]
+                time_meal_data.menus]
     else:
         lunch_meal_data = []
         for time_meal_data in day_meal_data:
-            if time_meal_data["MMEAL_SC_NM"] == target_time:
+            if time_meal_data.time == target_time:
                 lunch_meal_data = [{"menu_name": remove_allergy(menu), "alg": get_allergy(menu)} for menu in
-                                   time_meal_data["DDISH_NM"].split("<br/>")]
+                                   time_meal_data.menus]
 
     if len(lunch_meal_data) == 0:
         return None
@@ -137,6 +297,10 @@ def get_allergy(menu):
 
 
 def get_month_meal(school, year, month, target_time="중식", key="date"):
+    db_meal_data = get_range_meal_db(school, f"{str(year)}{str(month).zfill(2)}01",
+                                     f"{str(year)}{str(month).zfill(2)}{str(calendar.monthrange(int(year), int(month))[1]).zfill(2)}",
+                                     target_time)
+
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={year}{month.zfill(2)}01&MLSV_TO_YMD={year}{month.zfill(2)}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
@@ -144,33 +308,30 @@ def get_month_meal(school, year, month, target_time="중식", key="date"):
     if "mealServiceDietInfo" not in meal_data:
         return {}
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
 
     if target_time == "전체":
         if key == "date":
             lunch_meal_data = defaultdict(dict)
             for time_meal_data in day_meal_data:
-                lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
+                lunch_meal_data[time_meal_data.date][time_meal_data.time] = \
                     [remove_allergy(menu) for menu
                      in
-                     time_meal_data[
-                         "DDISH_NM"].split(
-                         "<br/>")]
+                     time_meal_data.menus]
         elif key == "time":
             print("DD")
             lunch_meal_data = defaultdict(list)
             for time_meal_data in day_meal_data:
-                lunch_meal_data[time_meal_data["MMEAL_SC_NM"]].append(
-                    {time_meal_data["MLSV_YMD"]: [remove_allergy(menu) for menu
-                     in
-                     time_meal_data[
-                         "DDISH_NM"].split(
-                         "<br/>")]})
+                lunch_meal_data[time_meal_data.time].append(
+                    {time_meal_data.date: [remove_allergy(menu) for menu
+                                           in
+                                           time_meal_data.menus]})
     else:
         lunch_meal_data = {}
         for time_meal_data in day_meal_data:
-            if time_meal_data["MMEAL_SC_NM"] == target_time:
-                lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in
-                                                               time_meal_data["DDISH_NM"].split("<br/>")]
+            if time_meal_data.time == target_time:
+                lunch_meal_data[time_meal_data.date] = [remove_allergy(menu) for menu in
+                                                        time_meal_data.menus]
 
     if len(lunch_meal_data) == 0:
         return {}
@@ -179,6 +340,8 @@ def get_month_meal(school, year, month, target_time="중식", key="date"):
 
 
 def get_range_meal(school, start_date, end_date, target_time="중식", key="date"):
+    db_meal_data = get_range_meal_db(school, start_date, end_date, target_time)
+
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={start_date}&MLSV_TO_YMD={end_date}31&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
@@ -186,33 +349,30 @@ def get_range_meal(school, start_date, end_date, target_time="중식", key="date
     if "mealServiceDietInfo" not in meal_data:
         return {}
     day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
 
     if target_time == "전체":
         if key == "date":
             lunch_meal_data = defaultdict(dict)
             for time_meal_data in day_meal_data:
-                lunch_meal_data[time_meal_data["MLSV_YMD"]][time_meal_data["MMEAL_SC_NM"]] = \
+                lunch_meal_data[time_meal_data.date][time_meal_data.time] = \
                     [remove_allergy(menu) for menu
                      in
-                     time_meal_data[
-                         "DDISH_NM"].split(
-                         "<br/>")]
+                     time_meal_data.menus]
         elif key == "time":
             print("DD")
             lunch_meal_data = defaultdict(list)
             for time_meal_data in day_meal_data:
-                lunch_meal_data[time_meal_data["MMEAL_SC_NM"]].append(
-                    {time_meal_data["MLSV_YMD"]: [remove_allergy(menu) for menu
-                                                  in
-                                                  time_meal_data[
-                                                      "DDISH_NM"].split(
-                                                      "<br/>")]})
+                lunch_meal_data[time_meal_data.time].append(
+                    {time_meal_data.date: [remove_allergy(menu) for menu
+                                           in
+                                           time_meal_data.menus]})
     else:
         lunch_meal_data = {}
         for time_meal_data in day_meal_data:
-            if time_meal_data["MMEAL_SC_NM"] == target_time:
-                lunch_meal_data[time_meal_data["MLSV_YMD"]] = [remove_allergy(menu) for menu in
-                                                               time_meal_data["DDISH_NM"].split("<br/>")]
+            if time_meal_data.time == target_time:
+                lunch_meal_data[time_meal_data.date] = [remove_allergy(menu) for menu in
+                                                        time_meal_data.menus]
 
     if len(lunch_meal_data) == 0:
         return {}
