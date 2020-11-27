@@ -79,7 +79,7 @@ def datetime_to_str(dt):
 def get_range_meal_db(school, start_date, end_date, target_time="중식"):
     result = []
     school_id = school.school_id
-    if school_id == 7530560 and target_time != "중식":
+    if school_id == 7530560:
 
         start_dt = str_to_date(start_date)
         end_dt = str_to_date(end_date)
@@ -110,6 +110,10 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
         for dt in not_saved_date_list:
 
+            if datetime.datetime.now() + datetime.timedelta(days=45) <= dt:  # 현재로부터 45일 이후의 급식 일 경우
+
+                continue
+
             dt_str = date_to_str(dt)
 
             is_update = False
@@ -117,7 +121,8 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             if dt in not_filled_date_list:  # db에 null 로 저장이 되어있음
                 meal_row = [x for x in not_filled_row_list if x.menu_date == dt][0]
                 if datetime.datetime.now() < meal_row.menu_date:  # 미래 급식일 때
-                    if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(days=1):  # 업데이트 되고 나서 1일 지남
+                    if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(
+                            hours=18):  # 업데이트 되고 나서 18시간 지남
                         is_update = True
                     else:
                         continue
@@ -167,7 +172,23 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                     Meal(school=school, menus=None, menu_date=dt, menu_time="석식",
                          add_date=datetime.datetime.now(), is_alg_exist=False))
 
-            db.session.commit()
+            if dt.weekday() >= 5:  # 토요일 or 일요일
+                if "lunch" in meal_data:
+                    db.session.add(
+                        Meal(school=school, menus=meal_data["lunch"].split("/"), menu_date=dt, menu_time="중식",
+                             add_date=datetime.datetime.now(), is_alg_exist=False))
+                    result.append(TimeOfMeal(from_db_data={
+                        "date": dt_str,
+                        "time": "중식",
+                        "menus": meal_data["lunch"].split("/")
+
+                    }))
+                else:
+                    db.session.add(
+                        Meal(school=school, menus=None, menu_date=dt, menu_time="중식",
+                             add_date=datetime.datetime.now(), is_alg_exist=False))
+
+                db.session.commit()
 
         # for dt in rrule(DAILY, dtstart=start_dt, until=end_dt):
         #     # print(dt.strpttime())
@@ -212,16 +233,20 @@ class TimeOfMeal():
 
 def get_day_meal(school, date, target_time="중식"):
     db_meal_data = get_range_meal_db(school, date, date, target_time)
-
+    print(db_meal_data)
+    print("!!!!!!!!!!!!!!!!!1")
     url = f"https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE={get_region_code(school.region)}&SD_SCHUL_CODE={school.school_id}&MLSV_FROM_YMD={date}&MLSV_TO_YMD={date}&KEY={NEIS_KEY}&pSize=365&Type=json"
     print(url)
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
+        day_meal_data = db_meal_data
+    else:
+        day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+        day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+
+    if len(day_meal_data) == 0:
         return None
-    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
-    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
-    print(day_meal_data)
 
     if target_time == "전체":
         lunch_meal_data = defaultdict(list)
