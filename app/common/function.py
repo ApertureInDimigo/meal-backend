@@ -285,10 +285,15 @@ def get_day_meal_with_alg(school, date, target_time="중식"):
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
+        day_meal_data = db_meal_data
+    else:
+        day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+        day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+
+    if len(day_meal_data) == 0:
         return None
 
-    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
-    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+
 
     if target_time == "전체":
         lunch_meal_data = defaultdict(list)
@@ -331,9 +336,13 @@ def get_month_meal(school, year, month, target_time="중식", key="date"):
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
+        day_meal_data = db_meal_data
+    else:
+        day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+        day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+
+    if len(day_meal_data) == 0:
         return {}
-    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
-    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
 
     if target_time == "전체":
         if key == "date":
@@ -372,9 +381,13 @@ def get_range_meal(school, start_date, end_date, target_time="중식", key="date
     meal_response = requests.request("GET", url)
     meal_data = json.loads(meal_response.text)
     if "mealServiceDietInfo" not in meal_data:
+        day_meal_data = db_meal_data
+    else:
+        day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
+        day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
+
+    if len(day_meal_data) == 0:
         return {}
-    day_meal_data = meal_data["mealServiceDietInfo"][1]["row"]
-    day_meal_data = [TimeOfMeal(from_neis_data=x) for x in day_meal_data] + db_meal_data
 
     if target_time == "전체":
         if key == "date":
