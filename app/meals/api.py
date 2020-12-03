@@ -104,7 +104,10 @@ class _MenuSimilar(Resource):
         print(range_meal_data)
 
         return {
-            "data": result
+            "data":{
+                "target" : target_menu,
+                "menus" :  result
+            }
         }
 
 
