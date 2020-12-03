@@ -1,13 +1,16 @@
 from flask import Blueprint
 from flask_restful import Api
 from app.meals.api import _RatingStar, _RatingAnswer, _RatingQuestion, _Menu, _RatingFavorite, _RatingStarMy, \
-    _RatingAnswerMy, _UpdateMealQuestion, _Menu_v2, _RatingFavoriteAll, _RatingFavorite_v2
+    _RatingAnswerMy, _UpdateMealQuestion, _Menu_v2, _RatingFavoriteAll, _RatingFavorite_v2, _MenuSimilar
 
 meals_bp = Blueprint('meals', __name__)
 
 api = Api(meals_bp)
 
 api.add_resource(_Menu, '/menu')
+
+api.add_resource(_MenuSimilar, '/menu/similar')
+
 
 api.add_resource(_Menu_v2, '/v2/menu')
 

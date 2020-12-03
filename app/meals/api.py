@@ -16,7 +16,7 @@ from flask import request, g
 import requests
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from statistics import mean
 import numpy as np
 from collections import defaultdict
@@ -48,6 +48,63 @@ class _Menu(Resource):
         # lunch_meal_data = get_range_meal(school, start_date="20201001", end_date="20201115", target_time=args["menu_time"])
         return {
             "data": lunch_meal_data
+        }
+
+
+class _MenuSimilar(Resource):
+    @return_500_if_errors
+    @login_required
+    def get(self):
+
+        student_id = g.user_id
+        args = request.args
+        print(args)
+
+        try:
+            args = MenuDateSeqSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+        print(args)
+        student, school = get_identify() or (None, None)
+        if student is None: return {"message": "올바르지 않은 회원 정보입니다."}, 401
+
+        day_meal_data = get_day_meal(school, args["menu_date"], target_time=args["menu_time"])
+        if day_meal_data is None:
+            return {"message": "급식이 존재하지 않습니다."}, 404
+        try:
+            target_menu = day_meal_data[args["menu_seq"]]
+        except (IndexError, ValueError):
+            return {"message": "급식이 존재하지 않습니다."}, 404
+
+        end_date = str_to_date(args["menu_date"]) - timedelta(days=1)
+        start_date = str_to_date(args["menu_date"]) - timedelta(days=91)
+
+        range_meal_data = get_range_meal(school, start_date=date_to_str(start_date), end_date=date_to_str(end_date),
+                                         target_time="전체")
+
+        result = []
+
+        for date in range_meal_data:
+            for time, menus in range_meal_data[date].items():
+                for menu in menus:
+                    if menu == target_menu:
+
+                        result.append({
+                            "menuDate": date, "menuTime": time, "menu": menu, "distance" : 0
+                        })
+                    else:
+                        distance = edit_distance(target_menu, menu)
+                        if distance <=  max(len(menu),len(target_menu)) // 1.5:
+                            result.append({
+                                "menuDate": date, "menuTime": time, "menu": menu, "distance": distance
+                            })
+
+
+        print(range_meal_data)
+
+        return {
+            "data": result
         }
 
 
@@ -103,7 +160,7 @@ class _RatingAnswerMy(Resource):
             load_only("menu_name", "questions")
         ).filter_by(
             school=school, menu_date=str_to_date(args["menu_date"]),
-            menu_seq=args["menu_seq"], student=student,menu_time=args["menu_time"],
+            menu_seq=args["menu_seq"], student=student, menu_time=args["menu_time"],
             banned=False).filter(MenuRating.questions.isnot(None)).first()
 
         question_rows_data = cache.get("question_rows_data")
@@ -261,7 +318,8 @@ class _RatingStar(Resource):
         #     return {"message": "급식이 존재하지 않습니다."}, 404
 
         old_rating_row = MenuRating.query.filter_by(school=school, student=student,
-                                                    menu_date=str_to_date(args["menu_date"]), menu_time=args["menu_time"]) \
+                                                    menu_date=str_to_date(args["menu_date"]),
+                                                    menu_time=args["menu_time"]) \
             .filter(MenuRating.star.isnot(None)).all()
 
         old_rating_menu_seq_list = [rating_row.menu_seq for rating_row in old_rating_row]
@@ -287,7 +345,7 @@ class _RatingStar(Resource):
                         menu_seq=menu["menu_seq"],
                         menu_name=lunch_meal_data[menu["menu_seq"]],
                         menu_date=str_to_date(args["menu_date"]),
-                        menu_time = args["menu_time"],
+                        menu_time=args["menu_time"],
                         star=menu["star"],
                         banned=False,
                         rating_date=now
