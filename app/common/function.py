@@ -120,7 +120,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
             if dt in not_filled_date_list:  # db에 null 로 저장이 되어있음
                 meal_row = [x for x in not_filled_row_list if x.menu_date == dt][0]
-                if datetime.datetime.now() < meal_row.menu_date:  # 미래 급식일 때
+                if datetime.datetime.now() < meal_row.menu_date + datetime.timedelta(days=1):  # 미래 급식일 때
                     if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(
                             hours=18):  # 업데이트 되고 나서 18시간 지남
                         is_update = True
@@ -607,3 +607,23 @@ def is_same_date(a, b):
         return False
     else:
         return True
+
+def edit_distance(s1, s2):
+
+
+    l1, l2 = len(s1), len(s2)
+    if l2 > l1:
+        return edit_distance(s2, s1)
+    if l2 is 0:
+        return l1
+    prev_row = list(range(l2 + 1))
+    current_row = [0] * (l2 + 1)
+    for i, c1 in enumerate(s1):
+        current_row[0] = i + 1
+        for j, c2 in enumerate(s2):
+            d_ins = current_row[j] + 1
+            d_del = prev_row[j + 1] + 1
+            d_sub = prev_row[j] + (1 if c1 != c2 else 0)
+            current_row[j + 1] = min(d_ins, d_del, d_sub)
+        prev_row[:] = current_row[:]
+    return prev_row[-1]
