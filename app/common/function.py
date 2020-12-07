@@ -120,7 +120,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
             if dt in not_filled_date_list:  # db에 null 로 저장이 되어있음
                 meal_row = [x for x in not_filled_row_list if x.menu_date == dt][0]
-                if datetime.datetime.now() < meal_row.menu_date:  # 미래 급식일 때
+                if datetime.datetime.now() < meal_row.menu_date + datetime.timedelta(days=1):  # 미래 급식일 때
                     if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(
                             hours=18):  # 업데이트 되고 나서 18시간 지남
                         is_update = True
