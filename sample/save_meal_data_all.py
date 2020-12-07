@@ -2,7 +2,14 @@ import requests
 import pickle
 import json
 import re
-from config import NEIS_KEY
+#from config import NEIS_KEY
+import configparser
+
+config = configparser.ConfigParser()
+config.read('../config.ini')
+host = "DEFAULT"
+NEIS_KEY = config[host]["NEIS_KEY"]
+
 final = []
 
 for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10","M10","N10","P10","Q10","R10","S10","T10"]:
@@ -46,12 +53,16 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
             if re.compile("^\d+[^색|단|번|곡|종|ml|L|월|\d].*").match(temp):
                 temp = re.sub("^[0-9]","",temp)
 
-            temp = re.sub("^[a-z]","",temp)         #문자열 맨 앞의 소문자 알파벳 제거
-            temp = re.sub("^[&|\+]","",temp)      #문자열 맨 앞의 & + / 제거
-            temp = re.sub("^/+","",temp)
+            # 특정 학교 배려
+            temp = re.sub("/고/조$", "", temp)
+            temp = re.sub("보조$", "", temp)
+
+            temp = re.sub("^[a-z]", "", temp)         #문자열 맨 앞의 소문자 알파벳 제거
+            temp = re.sub("^[&|\+]", "", temp)      #문자열 맨 앞의 & + / 제거
+            temp = re.sub("^/+", "", temp)
 
             if re.compile("^\d+[^색|단|번|곡|종|ml|L|월|\d].*").match(temp):
-                temp = re.sub("^[0-9]","",temp)
+                temp = re.sub("^[0-9]", "", temp)
             temp = re.sub("^[a-z]", "", temp)  # 문자열 맨 앞의 소문자 알파벳 제거
             temp = re.sub("^/+", "", temp)
 
@@ -59,7 +70,12 @@ for region_code in ["B10","C10","D10","E10","F10","G10","H10","I10","J10","K10",
             temp = re.sub("/$","",temp)
             temp = re.sub("[^망]]고$","",temp)
             temp = re.sub("[남고|여고|공고]$", "", temp)
-            temp = re.sub("과고[^구마]","",temp) #과고구마
+            temp = re.sub("과고[^구마]", "", temp) #과고구마
+            '''
+            if re.compile("[^차]조$").search(temp):
+                temp = re.sub("조$", "", temp)
+        `   '''
+            temp = re.sub("[^차]조$","", temp)
 
 
             return temp
