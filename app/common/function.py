@@ -93,7 +93,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
         not_filled_row_list = []
         not_filled_date_list = []
         for meal_row in meal_rows:
-            if datetime.datetime.now() > meal_row.menu_date or meal_row.menus is not None:
+            if meal_row.menu_date < meal_row.add_date or meal_row.menus is not None:
                 if meal_row.menus is not None:
                     result.append(TimeOfMeal(from_db_data={
                         "date": date_to_str(meal_row.menu_date), "time": meal_row.menu_time, "menus": meal_row.menus
