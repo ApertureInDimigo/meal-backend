@@ -103,6 +103,8 @@ class _MenuSimilar(Resource):
 
         print(range_meal_data)
 
+        result = sorted(result, key=lambda x : int(x["menuDate"]), reverse=True)
+
         return {
             "data":{
                 "target" : target_menu,
