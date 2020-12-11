@@ -104,6 +104,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             if meal_row.menus is None:
                 not_filled_row_list.append(meal_row)
                 not_filled_date_list.append(meal_row.menu_date)
+                print(meal_row.menu_date)
 
         not_saved_date_list = list(set(range_date) - set(saved_date_list))
         print(not_saved_date_list)
@@ -124,6 +125,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                     if datetime.datetime.now() >= meal_row.add_date + datetime.timedelta(
                             hours=18):  # 업데이트 되고 나서 18시간 지남
                         is_update = True
+                        print(dt, "!!!")
                     else:
                         continue
                 else:  # 과거 급식일 때
@@ -138,6 +140,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
             if is_update is True:
                 Meal.query.filter_by(school=school, menu_date=dt).delete()
+                print("delete!!!!!!!!!!!")
 
             if "breakfast" in meal_data:
 
@@ -188,7 +191,7 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                         Meal(school=school, menus=None, menu_date=dt, menu_time="중식",
                              add_date=datetime.datetime.now(), is_alg_exist=False))
 
-                db.session.commit()
+            db.session.commit()
 
         # for dt in rrule(DAILY, dtstart=start_dt, until=end_dt):
         #     # print(dt.strpttime())
