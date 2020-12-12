@@ -91,17 +91,19 @@ class _MenuSimilar(Resource):
                     if menu == target_menu:
 
                         result.append({
-                            "menuDate": date, "menuTime": time, "menu": menu, "distance" : 0
+                            "menuDate": date, "menuTime": time, "menu": menu, "distance" : 0, "menuSeq" : menus.index(menu)
                         })
                     else:
                         distance = edit_distance(target_menu, menu)
                         if distance <=  max(len(menu),len(target_menu)) // 1.5:
                             result.append({
-                                "menuDate": date, "menuTime": time, "menu": menu, "distance": distance
+                                "menuDate": date, "menuTime": time, "menu": menu, "distance": distance, "menuSeq" : menus.index(menu)
                             })
 
 
-        print(range_meal_data)
+        # print(range_meal_data)
+
+        result = sorted(result, key=lambda x : int(x["menuDate"]), reverse=True)
 
         return {
             "data":{

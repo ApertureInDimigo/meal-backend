@@ -92,6 +92,10 @@ def return_500_if_errors(f):
                                 "name": "Request Body",
                                 "value": json.dumps(request.get_json()) or "null"
                             },
+                            {
+                                "name": "Authorization",
+                                "value": request.headers.get('Authorization') or "null"
+                            },
 
                         ],
                         "color": 0
