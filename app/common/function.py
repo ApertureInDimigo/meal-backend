@@ -134,6 +134,12 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
             url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
             meal_response = requests.request("GET", url)
+            if meal_response is None:
+                print(dt_str)
+                print(dt_str)
+                print(dt_str)
+                print(dt_str)
+                print(dt_str)
             meal_data = json.loads(meal_response.text)
 
             print(meal_data)

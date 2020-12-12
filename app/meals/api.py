@@ -101,7 +101,7 @@ class _MenuSimilar(Resource):
                             })
 
 
-        print(range_meal_data)
+        # print(range_meal_data)
 
         result = sorted(result, key=lambda x : int(x["menuDate"]), reverse=True)
 
