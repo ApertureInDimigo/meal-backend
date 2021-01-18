@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from app import create_app
 from flask import render_template
-
+from datetime import datetime
 # app = create_app('config')
 # app.app_context().push()
 
@@ -56,6 +56,9 @@ def not_found(error):
 
 
 if __name__ == '__main__':
+
+    print(datetime.now())
+
     app.run(host=app.config['HOST'],
             port=app.config['PORT'],
             debug=app.config['DEBUG'])

@@ -86,3 +86,10 @@ else:
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 ADMIN_ID = os.environ.get('ADMIN_ID', None)
 ADMIN_PW = os.environ.get('ADMIN_PW', None)
+
+
+ACCESS_TOKEN_LIFE = 60 * 60
+REFRESH_TOKEN_LIFE = 60 * 60 * 24 * 7
+
+# ACCESS_TOKEN_LIFE = 3
+# REFRESH_TOKEN_LIFE = 5

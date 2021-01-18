@@ -1,12 +1,9 @@
 import firebase_admin
-from firebase_admin import auth, storage
 from firebase_admin import credentials
 import os
 
-from flask_admin import Admin
 from flask import Flask, Response
 from flask_cors import CORS
-from flask_swagger_ui import get_swaggerui_blueprint
 from app.common.function import *
 import json
 
@@ -15,10 +12,6 @@ import json
 
 class MyResponse(Response):
     default_mimetype = 'application/xml'
-
-from flask import request, Response
-from werkzeug.exceptions import HTTPException
-import flask_admin.contrib.sqla
 
 
 # http://flask.pocoo.org/docs/0.10/patterns/appfactories/
@@ -64,7 +57,6 @@ def create_app(config_filename):
 
     def fetch_spread_sheet():
         from app.cache import cache
-        from collections import namedtuple
         gc = gspread.authorize(GOOGLE_CREDENTIALS).open("급식질문")
 
         wks = gc.get_worksheet(0)
@@ -113,7 +105,8 @@ def create_app(config_filename):
     from app.auth.views import auth_bp
     from app.students.views import users_bp
     from app.schools.views import schools_bp
-    from app.meals.views import meals_bp
+    from app.meals.v1.views import meals_bp_v1
+    from app.meals.v2.views import meals_bp_v2
     from app.board.views import board_bp
     from app.social.views import social_bp
 
@@ -121,7 +114,8 @@ def create_app(config_filename):
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(users_bp, url_prefix='/api/students')
     app.register_blueprint(schools_bp, url_prefix='/api/schools')
-    app.register_blueprint(meals_bp, url_prefix='/api/meals')
+    app.register_blueprint(meals_bp_v1, url_prefix='/api/meals')
+    app.register_blueprint(meals_bp_v2, url_prefix='/api/meals/v2')
     app.register_blueprint(board_bp, url_prefix='/api/board')
     app.register_blueprint(social_bp, url_prefix='/api/social')
 
