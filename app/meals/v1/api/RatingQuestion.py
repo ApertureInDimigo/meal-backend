@@ -30,6 +30,16 @@ class RatingQuestion(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        """
+        해당 메뉴에 대한 급식 질문 리스트를 보여줌
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 해당 급식 없음
+        """
+
         student_id = g.user_id
         args = request.args
         print(args)

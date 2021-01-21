@@ -31,6 +31,15 @@ class RatingFavoriteAll(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        """
+        모든 즐겨찾기 리스트 보여줌
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        """
+
         student_id = g.user_id
         args = request.args
         print(args)
@@ -56,6 +65,14 @@ class RatingFavoriteAll(Resource):
     @return_500_if_errors
     @login_required
     def delete(self):
+
+        """
+        모든 즐겨찾기 삭제
+        :return:
+        200 : OK
+        401 : 회원정보 이상
+        404 : 좋아하는 메뉴가 없었음
+        """
 
         student_id = g.user_id
         args = request.args

@@ -22,6 +22,15 @@ from config import SECRET_KEY
 class IdCheck(Resource):
     @return_500_if_errors
     def get(self, id):
+        """
+        id 중복 체크
+        :param id:
+        :return:
+        200 : 사용 가능
+        409 : 중복
+        """
+
+
         # id = request.args.get("id")
         c = Student.query.filter_by(id=id).count()
         if c != 0:

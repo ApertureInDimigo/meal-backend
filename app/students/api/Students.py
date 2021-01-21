@@ -22,6 +22,16 @@ from config import SECRET_KEY
 class Students(Resource):
     @return_500_if_errors
     def post(self):
+        """
+        일반 회원가입
+        :return:
+        201 : OK
+        400 : 파라미터 무효
+        404 : 학교 없음
+        409 : 이미 존재하는 별명 or 이메일
+        """
+
+
         args = request.get_json()
         print(args)
 

@@ -30,6 +30,15 @@ class RatingStar(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        """
+        평균 별점 결과 확인 (당일이라면 자신이 평가한 메뉴만 보여주고, 과거의 급식이라면 모두 보여줌)
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        """
+
         student_id = g.user_id
         args = request.args
         print(args)
@@ -87,7 +96,16 @@ class RatingStar(Resource):
     @return_500_if_errors
     @login_required
     def post(self):
-
+        """
+        급식 메뉴에 대해 별점 추가
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 해당 급식이 없음
+        406 : 급식 날짜 당일이 아님
+        409 : 이미 평가함
+        """
         student_id = g.user_id
         args = request.get_json()
         try:

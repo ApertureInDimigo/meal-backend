@@ -16,10 +16,21 @@ import requests
 
 from app.common.function import verify_kakao_token
 
+
 class KakaoRegister(Resource):
 
     @return_500_if_errors
     def post(self):
+        """
+        카카오 계정 회원가입
+        카카오 액세스 토큰과 회원가입 데이터를 함께 json으로 받는다.
+        :return:
+        201 : OK
+        400 : 파라미터 무효
+        404 : 학교 없음
+        409 : 이미 존재하는 별명 or 카카오 ID
+        """
+
         args = request.get_json()
         access_token = args["accessToken"]
 

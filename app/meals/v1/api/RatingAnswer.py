@@ -28,6 +28,17 @@ class RatingAnswer(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        """
+        급식 질문에 대한 평균 응답 결과 보여줌
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 해당 메뉴에 대해 응답된 질문이 없음
+        409 : 아직 평가를 하지 않음(평가 후에 다른 사람들의 응답 결과를 보여 줌)
+        """
+
         student_id = g.user_id
         args = request.args
         print(args)
@@ -88,6 +99,19 @@ class RatingAnswer(Resource):
     @return_500_if_errors
     @login_required
     def post(self):
+
+        """
+        급식 질문에 대해 응답 추가
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 해당 급식이 없음 or 잘못된 질문 번호 or 질문에 대한 잘못된 응답 번호
+        406 : 급식 날짜 당일이 아님
+        409 : 이미 평가함
+        """
+
+
         student_id = g.user_id
         args = request.get_json()
 

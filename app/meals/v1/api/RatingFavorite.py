@@ -30,6 +30,16 @@ class RatingFavorite(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
+        """
+        즐겨찾기한 메뉴를 봄.
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 즐겨찾기가 없음
+        """
+
         student_id = g.user_id
         args = request.args
         print(args)
@@ -75,6 +85,15 @@ class RatingFavorite(Resource):
     @return_500_if_errors
     @login_required
     def post(self):
+        """
+        즐겨찾기 메뉴 추가
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        404 : 즐겨찾기가 없음
+        409 : 이미 좋아하는 메뉴임
+        """
 
         student_id = g.user_id
         args = request.get_json()
@@ -125,6 +144,15 @@ class RatingFavorite(Resource):
     @return_500_if_errors
     @login_required
     def delete(self):
+
+        """
+        즐겨찾기한 메뉴 삭제.
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        409 : 즐겨찾기 한 메뉴가 아님.
+        """
 
         student_id = g.user_id
         args = request.args

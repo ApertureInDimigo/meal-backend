@@ -25,7 +25,17 @@ from config import SECRET_KEY, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_LIFE
 
 class PasswordResetCheckCode(Resource):
     @return_500_if_errors
+
     def post(self):
+        """
+        비밀번호 찾기 인증 코드를 확인함.
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 인증코드 틀림
+        404 : 해당 이메일 없음
+        410 : 5번 이상 실패함
+        """
         import random
         import datetime
 

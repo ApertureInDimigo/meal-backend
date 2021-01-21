@@ -24,6 +24,15 @@ class PasswordReset(Resource):
     @login_required
     def put(self):
 
+        """
+        비밀번호 재설정이 이루어짐.
+        메일 코드 인증 후 받는 accessToken이 Bearer <token> 형식으로 헤더에 있어야 함(로그인 할 때처럼).
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원 정보 이상
+        """
+
         args = request.get_json()
         print(args)
 

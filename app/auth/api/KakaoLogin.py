@@ -21,6 +21,16 @@ class KakaoLogin(Resource):
 
     @return_500_if_errors
     def post(self):
+        """
+        카카오 로그인
+        카카오에서 제공한 accessToken 을 json으로 받는다.
+        :return:
+        200 : OK
+        400 : 토큰 이상함
+        404 : 카카오 회원가입이 되지 않음
+        """
+
+
         args = request.get_json()
         access_token = args["accessToken"]
 

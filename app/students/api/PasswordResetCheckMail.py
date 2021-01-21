@@ -24,6 +24,16 @@ from config import SECRET_KEY
 class PasswordResetCheckMail(Resource):
     @return_500_if_errors
     def post(self):
+
+        """
+        비밀번호 인증 코드 메일 전송
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        404 : 해당 이메일 존재 X
+        410 : 비밀번호 코드 인증 횟수(5번) 초과, 잠시 후 시도
+        """
+
         import random
         import datetime
 

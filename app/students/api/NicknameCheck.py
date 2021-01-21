@@ -23,6 +23,13 @@ from config import SECRET_KEY
 class NicknameCheck(Resource):
     @return_500_if_errors
     def get(self, nickname):
+        """
+        닉네임 중복 체크
+        :param nickname:
+        :return:
+        200 : 닉네임 사용 가능
+        409 : 닉네임 중복
+        """
         # nickname = request.args.get("nickname")
         c = Student.query.filter_by(nickname=nickname).count()
         if c != 0:

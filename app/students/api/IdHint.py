@@ -23,6 +23,15 @@ from config import SECRET_KEY
 class IdHint(Resource):
     @return_500_if_errors
     def get(self):
+        """
+        아이디(이메일) 찾기
+        닉네임 입력 받음.
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 해당 닉네임은 소셜 로그인 회원임
+        404 : 해당 닉네임 존재 X
+        """
 
         args = request.args
         print(args)

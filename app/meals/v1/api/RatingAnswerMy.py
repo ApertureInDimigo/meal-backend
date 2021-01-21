@@ -30,6 +30,14 @@ class RatingAnswerMy(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+        """
+        내가 응답한 급식 질문에 대한 평가
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        409 : 아직 평가 안 함
+        """
         student_id = g.user_id
         args = request.args
         print(args)
@@ -58,19 +66,6 @@ class RatingAnswerMy(Resource):
             banned=False).filter(MenuRating.questions.isnot(None)).first()
 
         question_rows_data = cache.get("question_rows_data")
-
-        # return {
-        #            "data": {
-        #                "menuSeq": args["menu_seq"],
-        #                "menuName": rating_rows.menu_name,
-        #                "answers":
-        #                    [{"questionSeq": int(question_seq), "answer": answer,
-        #                      "options": [question_row["options"] for question_row in question_rows_data if
-        #                                  question_row["question_seq"] == int(question_seq)]}
-        #                     for question_seq, answer in rating_rows.questions.items()],
-        #
-        #            }
-        #        }, 200
 
         answers = []
         for question_seq, answer in rating_rows.questions.items():
