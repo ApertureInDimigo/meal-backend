@@ -499,15 +499,9 @@ def dict_mean(dict_list):
 def get_host_type():
     import socket
     import os
+    from config import DEPLOY_HOST
+    return DEPLOY_HOST
 
-    hostname = socket.gethostname()
-    if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
-        host = "LOCAL"
-    elif hostname[:5] == "vultr":
-        host = "VULTR"
-    else:
-        host = "HEROKU"
-    return host
 
 
 def send_discord_webhook(webhook_body):
