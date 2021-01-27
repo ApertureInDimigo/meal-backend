@@ -11,12 +11,15 @@ scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
 # Chuns-MacBook-Air.local
 
-if hostname[:7] == "DESKTOP" or hostname[:5] == "Chuns":
-    host = "LOCAL"
+if  os.environ.get('DEPLOY_TYPE', None) == "HEROKU":
+    host = "HEROKU"
 elif hostname[:5] == "vultr":
     host = "VULTR"
 else:
-    host = "HEROKU"
+    host = "LOCAL"
+
+DEPLOY_HOST = host
+
 
 
 if host == "LOCAL" or host == "VULTR":
