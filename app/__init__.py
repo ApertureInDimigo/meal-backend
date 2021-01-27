@@ -6,6 +6,7 @@ from flask import Flask, Response
 from flask_cors import CORS
 from app.common.function import *
 import json
+from config import FIREBASE_CREDENTIALS_PATH
 
 
 
@@ -18,6 +19,8 @@ class MyResponse(Response):
 def create_app(config_filename):
 
     from app.cache import cache
+
+    #sched import 하자 마자 스케줄링이 시작됩니다.
     from app.scheduler import sched
     # from app.redis import redis_client
     import app.redis
@@ -27,21 +30,18 @@ def create_app(config_filename):
 
     host_type = get_host_type()
     if host_type == "LOCAL":
-        cred = credentials.Certificate("D:\Download\meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        # 제 컴퓨터의 파일 경로였습니다.. 이 코드를 보시는 분이 예쁘게 바꿔주세요..
+        cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+
         firebase = firebase_admin.initialize_app(cred)
     elif host_type == "VULTR":
-        cred = credentials.Certificate("/var/yammeal/meal-project-fa430-firebase-adminsdk-st4ap-02bf8af80f.json")
+        # Vultr 서버의 firebase 인증 json 경로입니다.
+        cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
         firebase = firebase_admin.initialize_app(cred)
     else:
         cred = json.loads(os.environ.get('FIREBASE_CONFIG', None))
         print(os.environ.get('FIREBASE_CONFIG', None))
         firebase = firebase_admin.initialize_app(credentials.Certificate(cred))
-
-
-
-
-
-
 
 
 
@@ -137,32 +137,7 @@ def create_app(config_filename):
                 post_row.views += view_count_list[index]
             db.session.commit()
 
-    # if not get_host_type():
-    #
-    #     # set optional bootswatch theme
-    #     app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
-    #
-    #     admin = Admin(app, name='microblog', template_mode='bootstrap3')
-    #     # Add administrative views here
-    #
-    #
-    #
-    #     class ModelView(flask_admin.contrib.sqla.ModelView):
-    #         def is_accessible(self):
-    #             auth = request.authorization or request.environ.get('REMOTE_USER')  # workaround for Apache
-    #             if not auth or (auth.username, auth.password) != (app.config['ADMIN_ID'], app.config['ADMIN_PW']):
-    #                 raise HTTPException('', Response(
-    #                     "Please log in.", 401,
-    #                     {'WWW-Authenticate': 'Basic realm="Login Required"'}
-    #                 ))
-    #             return True
-    #
-    #     admin.add_view(ModelView(Student, db.session))
-    #     admin.add_view(ModelView(School, db.session))
-    #     admin.add_view(ModelView(MenuRating, db.session))
-    #     admin.add_view(ModelView(MealBoard, db.session))
-    #     admin.add_view(ModelView(MealBoardLikes, db.session))
-    #     admin.add_view(ModelView(MealRatingQuestion, db.session))
+
 
 
 

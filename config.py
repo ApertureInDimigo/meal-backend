@@ -47,6 +47,8 @@ if host == "LOCAL" or host == "VULTR":
     GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config[host]['GOOGLE_CREDENTIALS_PATH'],
                                                                           scope)
 
+    FIREBASE_CREDENTIALS_PATH = config[host]['FIREBASE_CREDENTIALS_PATH']
+
     MAIL_ID = config[host]["MAIL_ID"]
     MAIL_PASSWORD = config[host]["MAIL_PASSWORD"]
 
