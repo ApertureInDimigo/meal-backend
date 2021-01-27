@@ -25,6 +25,20 @@ from oauth2client.service_account import ServiceAccountCredentials
 from app.cache import cache
 import copy
 
+def verify_kakao_token(access_token):
+    if access_token is None or type(access_token) != str:
+        return None
+
+    # access_token = "Sdfa"
+
+    res = requests.get("https://kapi.kakao.com/v2/user/me", headers={"Authorization": "Bearer " + access_token})
+    res_status = res.status_code
+    if res_status == 401:
+        return None
+    elif res_status == 200:
+        return json.loads(res.text)
+
+
 
 def get_region_code(region):
     region_code_list = ["B10", "C10", "D10", "E10", "F10", "G10", "H10", "I10", "J10", "K10", "M10", "N10", "P10",
@@ -135,11 +149,13 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
             meal_response = requests.request("GET", url)
             if meal_response is None:
+                print("!!!!!!!")
                 print(dt_str)
                 print(dt_str)
                 print(dt_str)
                 print(dt_str)
                 print(dt_str)
+                print("!!!!!!!")
             meal_data = json.loads(meal_response.text)
 
             print(meal_data)

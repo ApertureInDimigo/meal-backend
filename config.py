@@ -47,6 +47,8 @@ if host == "LOCAL" or host == "VULTR":
     GOOGLE_CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(config[host]['GOOGLE_CREDENTIALS_PATH'],
                                                                           scope)
 
+    FIREBASE_CREDENTIALS_PATH = config[host]['FIREBASE_CREDENTIALS_PATH']
+
     MAIL_ID = config[host]["MAIL_ID"]
     MAIL_PASSWORD = config[host]["MAIL_PASSWORD"]
 
@@ -86,3 +88,10 @@ else:
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 ADMIN_ID = os.environ.get('ADMIN_ID', None)
 ADMIN_PW = os.environ.get('ADMIN_PW', None)
+
+
+ACCESS_TOKEN_LIFE = 60 * 60
+REFRESH_TOKEN_LIFE = 60 * 60 * 24 * 7
+
+# ACCESS_TOKEN_LIFE = 3
+# REFRESH_TOKEN_LIFE = 5

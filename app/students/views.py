@@ -1,6 +1,13 @@
 from flask import Blueprint
 from flask_restful import Api
-from app.students.api import Students, IdCheck, NicknameCheck, PasswordResetCheckMail, PasswordResetCheckCode, PasswordReset, IdHint
+
+from app.students.api.IdCheck import IdCheck
+from app.students.api.IdHint import IdHint
+from app.students.api.NicknameCheck import NicknameCheck
+from app.students.api.PasswordReset import PasswordReset
+from app.students.api.PasswordResetCheckCode import PasswordResetCheckCode
+from app.students.api.PasswordResetCheckMail import PasswordResetCheckMail
+from app.students.api.Students import Students
 
 users_bp = Blueprint('students', __name__)
 
