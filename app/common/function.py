@@ -156,7 +156,10 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                 print(dt_str)
                 print(dt_str)
                 print("!!!!!!!")
-            meal_data = json.loads(meal_response.text)
+            try:
+                meal_data = json.loads(meal_response.text)
+            except:
+                continue
 
             print(meal_data)
 
