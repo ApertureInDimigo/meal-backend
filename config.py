@@ -85,6 +85,8 @@ else:
 
     NEIS_KEY = os.environ.get("NEIS_KEY", None)
 
+    FIREBASE_CREDENTIALS_PATH = None
+
     MAIL_ID = os.environ.get("MAIL_ID", None)
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", None)
 
