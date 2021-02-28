@@ -147,7 +147,12 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                         continue
 
             url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
-            meal_response = requests.request("GET", url)
+
+            try:
+
+                meal_response = requests.request("GET", url)
+            except:
+                continue
             if meal_response is None:
                 print("!!!!!!!")
                 print(dt_str)
