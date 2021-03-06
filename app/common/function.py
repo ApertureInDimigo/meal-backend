@@ -25,6 +25,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from app.cache import cache
 import copy
 
+
 def verify_kakao_token(access_token):
     if access_token is None or type(access_token) != str:
         return None
@@ -37,7 +38,6 @@ def verify_kakao_token(access_token):
         return None
     elif res_status == 200:
         return json.loads(res.text)
-
 
 
 def get_region_code(region):
@@ -93,7 +93,7 @@ def datetime_to_str(dt):
 def get_range_meal_db(school, start_date, end_date, target_time="중식"):
     result = []
     school_id = school.school_id
-    if school_id == 7530560:
+    if school_id == 7530560:  # 디미고 학교 코드
 
         start_dt = str_to_date(start_date)
         end_dt = str_to_date(end_date)
@@ -101,12 +101,17 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
         range_date = list(rrule(DAILY, dtstart=start_dt, until=end_dt))
 
         meal_rows = Meal.query.filter_by(school=school).filter(Meal.menu_date.in_(range_date)).all()
-        print(meal_rows)
+        # print(meal_rows)
 
         saved_date_list = []
         not_filled_row_list = []
         not_filled_date_list = []
+
+        # 일단 DB에 있는 정보를 result에 추가해준다.
+        # DB에 menus가 None이 아니라면 이 날 급식은 디미고인에서 굳이 가져올 필요 없음.
+
         for meal_row in meal_rows:
+
             if meal_row.menu_date < meal_row.add_date or meal_row.menus is not None:
                 if meal_row.menus is not None:
                     result.append(TimeOfMeal(from_db_data={
@@ -118,10 +123,10 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             if meal_row.menus is None:
                 not_filled_row_list.append(meal_row)
                 not_filled_date_list.append(meal_row.menu_date)
-                print(meal_row.menu_date)
+                # print(meal_row.menu_date)
 
         not_saved_date_list = list(set(range_date) - set(saved_date_list))
-        print(not_saved_date_list)
+        # print(not_saved_date_list)
 
         for dt in not_saved_date_list:
 
@@ -129,9 +134,14 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
                 continue
 
-            dt_str = date_to_str(dt)
+            dt_str = f"{dt.year}-{str(dt.month).zfill(2)}-{str(dt.day).zfill(2)}"
 
-            is_update = False
+            is_update = False  # 원래 있던 DB 정보를 업데이트하는 것인지 (사실 그냥 원래 있던 row를 삭제하고 새로운 정보를 집어 넣음.)
+
+            """
+            같은 날짜에 대한 반복적인 디미고인에 대한 호출을 막기 위해 한 번 급식 정보를 디미고인에서 받아온 후,
+            그 날 급식은 18시간 이내에 다시 디미고인에서 받아오지 않을 것임. 
+            """
 
             if dt in not_filled_date_list:  # db에 null 로 저장이 되어있음
                 meal_row = [x for x in not_filled_row_list if x.menu_date == dt][0]
@@ -146,23 +156,22 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
                     if meal_row.add_date > meal_row.menu_date:  # 이미 설정 됨
                         continue
 
-            url = f"https://dev-api.dimigo.in/dimibobs/{dt_str}"
-
+            url = f"https://api.dimigo.in/meal/date/{dt_str}"
+            print(url)
             try:
 
                 meal_response = requests.request("GET", url)
             except:
                 continue
             if meal_response is None:
-                print("!!!!!!!")
-                print(dt_str)
-                print(dt_str)
-                print(dt_str)
-                print(dt_str)
-                print(dt_str)
-                print("!!!!!!!")
+                pass
             try:
-                meal_data = json.loads(meal_response.text)
+                res_data = json.loads(meal_response.text)
+                if "meal" in res_data:  # 급식이 존재한다면
+                    meal_data = res_data["meal"]
+                else:
+                    continue
+
             except:
                 continue
 
@@ -175,13 +184,13 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             if "breakfast" in meal_data:
 
                 db.session.add(
-                    Meal(school=school, menus=meal_data["breakfast"].split("/"), menu_date=dt, menu_time="조식",
+                    Meal(school=school, menus=meal_data["breakfast"], menu_date=dt, menu_time="조식",
                          add_date=datetime.datetime.now(), is_alg_exist=False))
 
                 result.append(TimeOfMeal(from_db_data={
                     "date": dt_str,
                     "time": "조식",
-                    "menus": meal_data["breakfast"].split("/")
+                    "menus": meal_data["breakfast"]
 
                 }))
             else:
@@ -192,12 +201,12 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
 
             if "dinner" in meal_data:
                 db.session.add(
-                    Meal(school=school, menus=meal_data["dinner"].split("/"), menu_date=dt, menu_time="석식",
+                    Meal(school=school, menus=meal_data["dinner"], menu_date=dt, menu_time="석식",
                          add_date=datetime.datetime.now(), is_alg_exist=False))
                 result.append(TimeOfMeal(from_db_data={
                     "date": dt_str,
                     "time": "석식",
-                    "menus": meal_data["dinner"].split("/")
+                    "menus": meal_data["dinner"]
 
                 }))
             else:
@@ -208,12 +217,12 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             if dt.weekday() >= 5:  # 토요일 or 일요일
                 if "lunch" in meal_data:
                     db.session.add(
-                        Meal(school=school, menus=meal_data["lunch"].split("/"), menu_date=dt, menu_time="중식",
+                        Meal(school=school, menus=meal_data["lunch"], menu_date=dt, menu_time="중식",
                              add_date=datetime.datetime.now(), is_alg_exist=False))
                     result.append(TimeOfMeal(from_db_data={
                         "date": dt_str,
                         "time": "중식",
-                        "menus": meal_data["lunch"].split("/")
+                        "menus": meal_data["lunch"]
 
                     }))
                 else:
@@ -325,8 +334,6 @@ def get_day_meal_with_alg(school, date, target_time="중식"):
 
     if len(day_meal_data) == 0:
         return None
-
-
 
     if target_time == "전체":
         lunch_meal_data = defaultdict(list)
@@ -511,7 +518,6 @@ def get_host_type():
     return DEPLOY_HOST
 
 
-
 def send_discord_webhook(webhook_body):
     requests.post(
         DISCORD_WEBHOOK_URL,
@@ -635,9 +641,8 @@ def is_same_date(a, b):
     else:
         return True
 
+
 def edit_distance(s1, s2):
-
-
     l1, l2 = len(s1), len(s2)
     if l2 > l1:
         return edit_distance(s2, s1)
