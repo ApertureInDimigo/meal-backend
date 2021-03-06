@@ -164,18 +164,19 @@ def get_range_meal_db(school, start_date, end_date, target_time="중식"):
             except:
                 continue
             if meal_response is None:
-                pass
+                continue
             try:
                 res_data = json.loads(meal_response.text)
+                print("res_data", res_data)
                 if "meal" in res_data:  # 급식이 존재한다면
                     meal_data = res_data["meal"]
                 else:
-                    continue
+                    meal_data = {}
 
             except:
                 continue
 
-            print(meal_data)
+            # print("meal_data" , meal_data)
 
             if is_update is True:
                 Meal.query.filter_by(school=school, menu_date=dt).delete()
