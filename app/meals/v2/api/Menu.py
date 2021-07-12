@@ -29,6 +29,7 @@ class Menu(Resource):
     @return_500_if_errors
     @login_required
     def get(self):
+
         """
         메뉴 + 알레르기 정보 보여줌
         :return:
@@ -53,3 +54,32 @@ class Menu(Resource):
         return {
             "data": lunch_meal_data
         }
+
+
+class MenuDimigo(Resource):
+    @return_500_if_errors
+    def get(self):
+        """
+        디미고 메뉴 + 알레르기 정보 보여줌 (로그인 안 해도 됨)
+        :return:
+        200 : OK
+        400 : 파라미터 무효
+        401 : 회원정보 이상
+        """
+
+        # student_id = g.user_id
+        args = request.args
+        print(args)
+
+        try:
+            args = MenuDateSchema().load(args)
+        except marshmallow.exceptions.ValidationError as e:
+            print(e.messages)
+            return {"message": "파라미터 값이 유효하지 않습니다."}, 400
+
+        school = School.query.filter_by(school_id=7530560).first()
+        lunch_meal_data = get_day_meal_with_alg(school, args["menu_date"], target_time=args["menu_time"])
+        return {
+            "data": lunch_meal_data
+        }
+
