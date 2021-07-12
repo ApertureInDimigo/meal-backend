@@ -9,6 +9,7 @@ class MenuDateSchema(Schema):
     menu_time = fields.String(required=False, data_key="menuTime", missing="중식")
 
 
+
 class QuestionSchema(Schema):
     question_seq = fields.Integer(required=True, data_key="questionSeq")
     answer = fields.Integer(required=True, data_key="answer")
